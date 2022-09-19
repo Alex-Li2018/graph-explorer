@@ -1,0 +1,50 @@
+{
+  "name": "graph-explorer",
+  "version": "1.0.0",
+  "description": "图谱探索是基于d3的图谱可视化产品",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "types": "types/index.d.ts",
+  "scripts": {
+    "clean": "rimraf lib dist es types",
+    "build": "ssrollup --config ./config/rollup.config.js",
+    "lint": "eslint --ext .js,.jsx src/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alex-Li2018/graph-explorer.git"
+  },
+  "keywords": [
+    "graph-explorer"
+  ],
+  "author": "alex li",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Alex-Li2018/graph-explorer/issues"
+  },
+  "homepage": "https://github.com/Alex-Li2018/graph-explorer#readme",
+  "dependencies": {
+    "typescript": "^4.8.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.19.1",
+    "@babel/plugin-transform-runtime": "^7.19.1",
+    "@babel/preset-env": "^7.19.1",
+    "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-node-resolve": "^14.1.0",
+    "@typescript-eslint/eslint-plugin": "^5.37.0",
+    "@typescript-eslint/parser": "^5.37.0",
+    "eslint": "^8.23.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.7.1",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.79.0",
+    "rollup-plugin-typescript2": "^0.34.0",
+    "cross-env": "^7.0.3"
+  },
+  "peerDependencies": {
+    "@babel/runtime": "^7.16.3"
+  }
+}
