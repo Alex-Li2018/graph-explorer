@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/Alex-Li2018/graph-explorer#readme",
   "dependencies": {
+    "d3": "^7.6.1",
     "typescript": "^4.8.3"
   },
   "devDependencies": {
@@ -32,8 +33,10 @@
     "@babel/preset-env": "^7.19.1",
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-node-resolve": "^14.1.0",
+    "@types/d3": "^7.4.0",
     "@typescript-eslint/eslint-plugin": "^5.37.0",
     "@typescript-eslint/parser": "^5.37.0",
+    "cross-env": "^7.0.3",
     "eslint": "^8.23.1",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
@@ -41,8 +44,7 @@
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
     "rollup": "^2.79.0",
-    "rollup-plugin-typescript2": "^0.34.0",
-    "cross-env": "^7.0.3"
+    "rollup-plugin-typescript2": "^0.34.0"
   },
   "peerDependencies": {
     "@babel/runtime": "^7.16.3"
