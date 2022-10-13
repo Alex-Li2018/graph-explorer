@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/Alex-Li2018/graph-explorer#readme",
   "dependencies": {
+    "@neo4j-devtools/word-color": "^0.0.7",
     "d3": "^7.6.1",
     "d3-color": "^3.1.0",
     "d3-drag": "^3.0.0",
