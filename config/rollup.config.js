@@ -8,10 +8,10 @@ const babelRuntimeVersion = pkg.peerDependencies['@babel/runtime'].replace(
   '',
 );
 const extensions = ['.ts'];
-const noDeclarationFiles = { 
-  compilerOptions: { 
-    declaration: false 
-  } 
+const noDeclarationFiles = {
+  compilerOptions: {
+    declaration: false,
+  },
 };
 // 生成external配置
 const makeExternalPredicate = (externalArr) => {
