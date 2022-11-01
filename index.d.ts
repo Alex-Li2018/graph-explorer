@@ -1,6 +1,6 @@
-import { GraphModel } from './render/Graph';
-import { GraphStyleModel } from './render/GraphStyle';
-import { ForceSimulation } from './force/ForceSimulation';
+import { GraphModel } from './types/render/Graph';
+import { GraphStyleModel } from './types/render/GraphStyle';
+import { ForceSimulation } from './types/force/ForceSimulation';
 import { ZoomLimitsReached, ZoomType } from './types';
 declare type MeasureSizeFn = () => {
     width: number;

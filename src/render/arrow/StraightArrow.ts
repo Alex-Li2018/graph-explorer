@@ -1,4 +1,4 @@
-import { RelationshipCaptionLayout } from '../Relationship';
+import { RelationshipCaptionLayout } from '../../models/Relationship';
 
 export class StraightArrow {
   length: number;

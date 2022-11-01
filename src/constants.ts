@@ -1,5 +1,5 @@
-import { NodeModel } from './render/Node';
-import { RelationshipModel } from './render/Relationship';
+import { NodeModel } from './models/Node';
+import { RelationshipModel } from './models/Relationship';
 
 export const MAX_PRECOMPUTED_TICKS = 300;
 export const EXTRA_TICKS_PER_RENDER = 10;

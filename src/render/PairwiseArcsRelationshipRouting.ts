@@ -1,6 +1,6 @@
 import { GraphModel, NodePair } from '../models/Graph';
 import { GraphStyleModel } from '../models/GraphStyle';
-import { RelationshipModel } from './Relationship';
+import { RelationshipModel } from '../models/Relationship';
 import { ArcArrow } from './arrow/ArcArrow';
 import { LoopArrow } from './arrow/LoopArrow';
 import { StraightArrow } from './arrow/StraightArrow';

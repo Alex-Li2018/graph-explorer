@@ -2,8 +2,8 @@ import { PairwiseArcsRelationshipRouting } from './PairwiseArcsRelationshipRouti
 import { measureText } from '../utils/textMeasurement';
 import { GraphModel } from '../models/Graph';
 import { GraphStyleModel } from '../models/GraphStyle';
-import { NodeCaptionLine, NodeModel } from './Node';
-import { RelationshipModel } from './Relationship';
+import { NodeCaptionLine, NodeModel } from '../models/Node';
+import { RelationshipModel } from '../models/Relationship';
 
 export class GraphGeometryModel {
   relationshipRouting: PairwiseArcsRelationshipRouting;

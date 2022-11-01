@@ -1,4 +1,4 @@
-import { VizItemProperty } from '../types';
+import { VizItemProperty } from '../../types';
 import { GraphModel } from './Graph';
 declare type NodeProperties = {
   [key: string]: string;

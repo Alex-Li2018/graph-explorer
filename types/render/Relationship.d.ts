@@ -1,4 +1,4 @@
-import { VizItemProperty } from '../types';
+import { VizItemProperty } from '../../types';
 import { ArcArrow } from './arrow/ArcArrow';
 import { LoopArrow } from './arrow/LoopArrow';
 import { StraightArrow } from './arrow/StraightArrow';

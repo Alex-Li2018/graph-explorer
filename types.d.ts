@@ -1,5 +1,5 @@
-import { NodeModel } from './render/Node';
-import { RelationshipModel } from './render/Relationship';
+import { NodeModel } from './types/render/Node';
+import { RelationshipModel } from './types/render/Relationship';
 export declare type BasicNode = {
   id: string;
   labels: string[];

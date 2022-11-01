@@ -1,4 +1,4 @@
-import { RelationshipCaptionLayout } from '../Relationship';
+import { RelationshipCaptionLayout } from '../../models/Relationship';
 
 type Point = { x: number; y: number };
 const square = (l: number) => l * l;
