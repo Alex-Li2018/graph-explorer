@@ -6,7 +6,7 @@ declare type MeasureSizeFn = () => {
     width: number;
     height: number;
 };
-export declare class Visualization {
+export default class GraphVisualization {
     private measureSize;
     private graph;
     style: GraphStyleModel;

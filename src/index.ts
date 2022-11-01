@@ -32,19 +32,20 @@ import { ZoomLimitsReached, ZoomType } from './types';
 
 type MeasureSizeFn = () => { width: number; height: number };
 
-export class Visualization {
+export default class GraphVisualization {
   private readonly root: Selection<SVGElement, unknown, BaseType, unknown>;
   private baseGroup: Selection<SVGGElement, unknown, BaseType, unknown>;
   private rect: Selection<SVGRectElement, unknown, BaseType, unknown>;
   private container: Selection<SVGGElement, unknown, BaseType, unknown>;
   private geometry: GraphGeometryModel;
   private zoomBehavior: ZoomBehavior<SVGElement, unknown>;
+  // 最小缩放
   private zoomMinScaleExtent: number = ZOOM_MIN_SCALE;
   private callbacks: Record<
     string,
     undefined | Array<(...args: unknown[]) => void>
   > = {};
-
+  // 力仿真6
   forceSimulation: ForceSimulation;
 
   // This flags that a panning is ongoing and won't trigger
