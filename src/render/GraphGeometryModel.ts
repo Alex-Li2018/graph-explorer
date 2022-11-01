@@ -1,7 +1,7 @@
 import { PairwiseArcsRelationshipRouting } from './PairwiseArcsRelationshipRouting';
 import { measureText } from '../utils/textMeasurement';
-import { GraphModel } from './Graph';
-import { GraphStyleModel } from './GraphStyle';
+import { GraphModel } from '../models/Graph';
+import { GraphStyleModel } from '../models/GraphStyle';
 import { NodeCaptionLine, NodeModel } from './Node';
 import { RelationshipModel } from './Relationship';
 

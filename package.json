@@ -8,7 +8,7 @@
   "scripts": {
     "clean": "rimraf lib dist es types",
     "build": "rollup --config ./build/rollup.config.js",
-    "lint": "eslint --ext .js,.jsx /src"
+    "lint": "eslint --fix --ext .ts,.js, /src"
   },
   "repository": {
     "type": "git",

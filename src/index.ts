@@ -12,11 +12,13 @@ import {
   ZOOM_MAX_SCALE,
   ZOOM_MIN_SCALE,
 } from './constants';
-import { GraphModel } from './render/Graph';
+import { BasicNodesAndRels } from './types';
+import { GraphModel } from './models/Graph';
+import { createGraph } from './models/MapGraphData';
 import { GraphGeometryModel } from './render/GraphGeometryModel';
-import { GraphStyleModel } from './render/GraphStyle';
-import { NodeModel } from './render/Node';
-import { RelationshipModel } from './render/Relationship';
+import { GraphStyleModel } from './models/GraphStyle';
+import { NodeModel } from './models/Node';
+import { RelationshipModel } from './models/Relationship';
 import { isNullish } from './utils/utils';
 import { ForceSimulation } from './force/ForceSimulation';
 // import {
@@ -45,6 +47,9 @@ export default class GraphVisualization {
     string,
     undefined | Array<(...args: unknown[]) => void>
   > = {};
+  private graph: GraphModel;
+  public style: GraphStyleModel;
+
   // 力仿真6
   forceSimulation: ForceSimulation;
 
@@ -58,13 +63,19 @@ export default class GraphVisualization {
     private measureSize: MeasureSizeFn,
     onZoomEvent: (limitsReached: ZoomLimitsReached) => void,
     onDisplayZoomWheelInfoMessage: () => void,
-    private graph: GraphModel,
-    public style: GraphStyleModel,
+    public graphData: BasicNodesAndRels,
+    // public style: GraphStyleModel,
     public isFullscreen: boolean,
     public wheelZoomRequiresModKey?: boolean,
     private initialZoomToFit?: boolean,
   ) {
     this.root = d3Select(element);
+
+    // init graph data
+    this.graph = createGraph(graphData.nodes, graphData.relationships);
+
+    // init graph style
+    this.style = new GraphStyleModel();
 
     this.isFullscreen = isFullscreen;
     this.wheelZoomRequiresModKey = wheelZoomRequiresModKey;
@@ -94,7 +105,7 @@ export default class GraphVisualization {
     // node relation container
     this.container = this.baseGroup.append('g');
 
-    this.geometry = new GraphGeometryModel(style);
+    this.geometry = new GraphGeometryModel(this.style);
 
     this.zoomBehavior = d3Zoom<SVGElement, unknown>()
       .scaleExtent([this.zoomMinScaleExtent, ZOOM_MAX_SCALE])

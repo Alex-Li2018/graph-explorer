@@ -1,4 +1,4 @@
-import { NodeModel } from '../render/Node';
+import { NodeModel } from '../models/Node';
 
 export default function circularLayout(
   nodes: NodeModel[],

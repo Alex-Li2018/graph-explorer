@@ -23,11 +23,118 @@
             width: domRef.clientWidth || 200,
             height: domRef.clientHeight || 200
         })
+        const graphData = {
+            nodes: [
+                {
+                    "id": "85",
+                    "labels": [
+                        "Movie"
+                    ],
+                    "properties": {
+                        "tagline": "In every life there comes a time when that thing you dream becomes that thing you do",
+                        "title": "That Thing You Do",
+                        "released": "1996"
+                    },
+                    "propertyTypes": {
+                        "tagline": "String",
+                        "title": "String",
+                        "released": "Integer"
+                    }
+                },
+                {
+                    "id": "71",
+                    "labels": [
+                        "Person"
+                    ],
+                    "properties": {
+                        "born": "1956",
+                        "name": "Tom Hanks"
+                    },
+                    "propertyTypes": {
+                        "born": "Integer",
+                        "name": "String"
+                    }
+                },
+                {
+                    "id": "86",
+                    "labels": [
+                        "Person"
+                    ],
+                    "properties": {
+                        "born": "1977",
+                        "name": "Liv Tyler"
+                    },
+                    "propertyTypes": {
+                        "born": "Integer",
+                        "name": "String"
+                    }
+                },
+                {
+                    "id": "12",
+                    "labels": [
+                        "Person"
+                    ],
+                    "properties": {
+                        "born": "1975",
+                        "name": "Charlize Theron"
+                    },
+                    "propertyTypes": {
+                        "born": "Integer",
+                        "name": "String"
+                    }
+                }
+            ],
+            relationships: [
+                {
+                    "id": "110",
+                    "startNodeId": "71",
+                    "endNodeId": "85",
+                    "type": "ACTED_IN",
+                    "properties": {
+                        "roles": [
+                            "Mr. White"
+                        ]
+                    },
+                    "propertyTypes": {
+                        "roles": "Array(1)"
+                    }
+                },
+                {
+                    "id": "111",
+                    "startNodeId": "86",
+                    "endNodeId": "85",
+                    "type": "ACTED_IN",
+                    "properties": {
+                        "roles": [
+                            "Faye Dolan"
+                        ]
+                    },
+                    "propertyTypes": {
+                        "roles": "Array(1)"
+                    }
+                },
+                {
+                    "id": "112",
+                    "startNodeId": "12",
+                    "endNodeId": "85",
+                    "type": "ACTED_IN",
+                    "properties": {
+                        "roles": [
+                            "Tina"
+                        ]
+                    },
+                    "propertyTypes": {
+                        "roles": "Array(1)"
+                    }
+                }
+            ]
+        }
         const instance = new GraphVisualization(
             domRef,
             measureSize,
             function() {},
             function() {},
+            graphData,
         )
     </script>
 </body>

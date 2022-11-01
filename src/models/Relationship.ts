@@ -1,7 +1,7 @@
 import { VizItemProperty } from '../types';
-import { ArcArrow } from './arrow/ArcArrow';
-import { LoopArrow } from './arrow/LoopArrow';
-import { StraightArrow } from './arrow/StraightArrow';
+import { ArcArrow } from '../render/arrow/ArcArrow';
+import { LoopArrow } from '../render/arrow/LoopArrow';
+import { StraightArrow } from '../render/arrow/StraightArrow';
 import { NodeModel } from './Node';
 
 export type RelationshipCaptionLayout = 'internal' | 'external';

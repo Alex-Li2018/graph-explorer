@@ -21,9 +21,9 @@ import {
   EXTRA_TICKS_PER_RENDER,
   VELOCITY_DECAY,
 } from '../constants';
-import { GraphModel } from '../render/Graph';
-import { NodeModel } from '../render/Node';
-import { RelationshipModel } from '../render/Relationship';
+import { GraphModel } from '../models/Graph';
+import { NodeModel } from '../models/Node';
+import { RelationshipModel } from '../models/Relationship';
 import circularLayout from './circularLayout';
 
 const oneRelationshipPerPairOfNodes = (graph: GraphModel) =>

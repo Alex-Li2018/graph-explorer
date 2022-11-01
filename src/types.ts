@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { NodeModel } from './render/Node';
-import { RelationshipModel } from './render/Relationship';
+import { NodeModel } from './models/Node';
+import { RelationshipModel } from './models/Relationship';
 
 export type BasicNode = {
   id: string;
