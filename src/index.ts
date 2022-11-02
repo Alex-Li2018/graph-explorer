@@ -21,14 +21,14 @@ import { NodeModel } from './models/Node';
 import { RelationshipModel } from './models/Relationship';
 import { isNullish } from './utils/utils';
 import { ForceSimulation } from './force/ForceSimulation';
-// import {
-//   nodeEventHandlers,
-//   relationshipEventHandlers,
-// } from './mouseEventHandlers';
-// import {
-//   node as nodeRenderer,
-//   relationship as relationshipRenderer,
-// } from './renderers/init';
+import {
+  nodeEventHandlers,
+  relationshipEventHandlers,
+} from './mouseEventHandlers';
+import {
+  node as nodeRenderer,
+  relationship as relationshipRenderer,
+} from './render/renderers/init';
 // import { nodeMenuRenderer } from './renderers/menu';
 import { ZoomLimitsReached, ZoomType } from './types';
 
@@ -158,48 +158,47 @@ export default class GraphVisualization {
   private render() {
     this.geometry.onTick(this.graph);
 
-    // const nodeGroups = this.container
-    //   .selectAll<SVGGElement, NodeModel>('g.node')
-    //   .attr('transform', (d) => `translate(${d.x},${d.y})`);
+    const nodeGroups = this.container
+      .selectAll<SVGGElement, NodeModel>('g.node')
+      .attr('transform', (d) => `translate(${d.x},${d.y})`);
 
-    // nodeRenderer.forEach((renderer) => nodeGroups.call(renderer.onTick, this));
+    nodeRenderer.forEach((renderer) => nodeGroups.call(renderer.onTick, this));
 
-    // const relationshipGroups = this.container
-    //   .selectAll<SVGGElement, RelationshipModel>('g.relationship')
-    //   .attr(
-    //     'transform',
-    //     (d) =>
-    //       `translate(${d.source.x} ${d.source.y}) rotate(${
-    //         d.naturalAngle + 180
-    //       })`,
-    //   );
+    const relationshipGroups = this.container
+      .selectAll<SVGGElement, RelationshipModel>('g.relationship')
+      .attr(
+        'transform',
+        (d) =>
+          `translate(${d.source.x} ${d.source.y}) rotate(${
+            d.naturalAngle + 180
+          })`,
+      );
 
-    // relationshipRenderer.forEach((renderer) =>
-    //   relationshipGroups.call(renderer.onTick, this),
-    // );
+    relationshipRenderer.forEach((renderer) =>
+      relationshipGroups.call(renderer.onTick, this),
+    );
   }
 
   private updateNodes() {
     const nodes = this.graph.nodes();
-    // this.geometry.onGraphChange(this.graph, {
-    //   updateNodes: true,
-    //   updateRelationships: false,
-    // });
+    this.geometry.onGraphChange(this.graph, {
+      updateNodes: true,
+      updateRelationships: false,
+    });
 
-    // const nodeGroups =
-    this.container
+    const nodeGroups = this.container
       .select('g.layer.nodes')
       .selectAll<SVGGElement, NodeModel>('g.node')
       .data(nodes, (d) => d.id)
       .join('g')
       .attr('class', 'node')
       .attr('aria-label', (d) => `graph-node${d.id}`)
-      // .call(nodeEventHandlers, this.trigger, this.forceSimulation.simulation)
+      .call(nodeEventHandlers, this.trigger, this.forceSimulation.simulation)
       .classed('selected', (node) => node.selected);
 
-    // nodeRenderer.forEach((renderer) =>
-    //   nodeGroups.call(renderer.onGraphChange, this),
-    // );
+    nodeRenderer.forEach((renderer) =>
+      nodeGroups.call(renderer.onGraphChange, this),
+    );
 
     // nodeMenuRenderer.forEach((renderer) =>
     //   nodeGroups.call(renderer.onGraphChange, this),
@@ -211,24 +210,23 @@ export default class GraphVisualization {
 
   private updateRelationships() {
     const relationships = this.graph.relationships();
-    // this.geometry.onGraphChange(this.graph, {
-    //   updateNodes: false,
-    //   updateRelationships: true,
-    // });
+    this.geometry.onGraphChange(this.graph, {
+      updateNodes: false,
+      updateRelationships: true,
+    });
 
-    // const relationshipGroups =
-    this.container
+    const relationshipGroups = this.container
       .select('g.layer.relationships')
       .selectAll<SVGGElement, RelationshipModel>('g.relationship')
       .data(relationships, (d) => d.id)
       .join('g')
       .attr('class', 'relationship')
-      // .call(relationshipEventHandlers, this.trigger)
+      .call(relationshipEventHandlers, this.trigger)
       .classed('selected', (relationship) => relationship.selected);
 
-    // relationshipRenderer.forEach((renderer) =>
-    //   relationshipGroups.call(renderer.onGraphChange, this),
-    // );
+    relationshipRenderer.forEach((renderer) =>
+      relationshipGroups.call(renderer.onGraphChange, this),
+    );
 
     this.forceSimulation.updateRelationships(this.graph);
   }
