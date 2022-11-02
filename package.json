@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/Alex-Li2018/graph-explorer#readme",
   "dependencies": {
-    "@neo4j-devtools/word-color": "^0.0.7",
+    "chroma-js": "^2.4.2",
     "d3": "^7.6.1",
     "d3-color": "^3.1.0",
     "d3-drag": "^3.0.0",
@@ -43,6 +43,7 @@
     "@babel/preset-env": "^7.19.1",
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-node-resolve": "^14.1.0",
+    "@types/chroma-js": "^2.1.4",
     "@types/d3": "^7.4.0",
     "@types/d3-color": "^3.1.0",
     "@types/d3-drag": "^3.0.1",
