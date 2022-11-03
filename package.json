@@ -42,6 +42,7 @@
     "@babel/plugin-transform-runtime": "^7.19.1",
     "@babel/preset-env": "^7.19.1",
     "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-commonjs": "^23.0.2",
     "@rollup/plugin-node-resolve": "^14.1.0",
     "@types/chroma-js": "^2.1.4",
     "@types/d3": "^7.4.0",
@@ -64,8 +65,8 @@
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
     "rollup": "^2.79.0",
-    "rollup-plugin-typescript2": "^0.34.0",
-    "rollup-plugin-dts": "^4.0.0"
+    "rollup-plugin-dts": "^4.0.0",
+    "rollup-plugin-typescript2": "^0.34.0"
   },
   "peerDependencies": {
     "@babel/runtime": "^7.16.3"

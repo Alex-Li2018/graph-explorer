@@ -6,7 +6,6 @@ import {
   zoom as d3Zoom,
   zoomIdentity,
 } from 'd3-zoom';
-
 import {
   ZOOM_FIT_PADDING_PERCENT,
   ZOOM_MAX_SCALE,
@@ -262,7 +261,8 @@ export default class GraphVisualization {
   private getZoomScaleFactorToFitWholeGraph = ():
     | { scale: number; centerPointOffset: { x: number; y: number } }
     | undefined => {
-    const graphSize = this.container.node()?.getBBox();
+    const graphSize =
+      this.container.node()?.getBBox && this.container.node()?.getBBox();
     const availableWidth = this.root.node()?.clientWidth;
     const availableHeight = this.root.node()?.clientHeight;
 

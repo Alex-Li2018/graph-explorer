@@ -204,8 +204,9 @@ declare type DefaultColorType = {
     'text-color-internal': string;
 };
 declare class GraphStyleModel {
+    private useGeneratedDefaultColors;
     rules: StyleRule[];
-    constructor();
+    constructor(useGeneratedDefaultColors?: boolean);
     parseSelector: (key: string) => Selector;
     nodeSelector: (node?: {
         labels: null | string[];

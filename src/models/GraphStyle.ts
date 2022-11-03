@@ -1,4 +1,4 @@
-// import { calculateDefaultNodeColors } from '../utils/wordColorCalculator';
+import { calculateDefaultNodeColors } from '../utils/wordColorCalculator';
 import { selectorArrayToString, selectorStringToArray } from '../utils/utils';
 
 export class Selector {
@@ -89,6 +89,7 @@ const DEFAULT_STYLE = {
     caption: '<type>',
   },
 };
+// 直径
 type DefaultSizeType = { diameter: string };
 const DEFAULT_SIZES: DefaultSizeType[] = [
   {
@@ -206,8 +207,7 @@ const DEFAULT_COLORS: DefaultColorType[] = [
 export class GraphStyleModel {
   rules: StyleRule[];
 
-  // constructor(private useGeneratedDefaultColors: boolean = false) {
-  constructor() {
+  constructor(private useGeneratedDefaultColors: boolean = false) {
     this.rules = [];
     try {
       this.loadRules();
@@ -303,14 +303,14 @@ export class GraphStyleModel {
   };
 
   setDefaultNodeStyle = (selector: Selector, item: any): void => {
-    // const defaultColor = true;
+    let defaultColor = true;
     let defaultCaption = true;
     for (let i = 0; i < this.rules.length; i++) {
       const rule = this.rules[i];
       if (rule.selector.classes.length > 0 && rule.matches(selector)) {
-        // if (rule.props.hasOwnProperty('color')) {
-        //   defaultColor = false;
-        // }
+        if (rule.props.hasOwnProperty('color')) {
+          defaultColor = false;
+        }
         if (rule.props.hasOwnProperty('caption')) {
           defaultCaption = false;
         }
@@ -320,25 +320,25 @@ export class GraphStyleModel {
       selector.tag,
       selector.classes.sort().slice(0, 1),
     );
-    // if (defaultColor) {
-    //   const calcColor = (label: Selector): DefaultColorType => {
-    //     const { backgroundColor, borderColor, textColor } =
-    //       calculateDefaultNodeColors(label.classes[0]);
+    if (defaultColor) {
+      const calcColor = (label: Selector): DefaultColorType => {
+        const { backgroundColor, borderColor, textColor } =
+          calculateDefaultNodeColors(label.classes[0]);
 
-    //     return {
-    //       'border-color': borderColor,
-    //       'text-color-internal': textColor,
-    //       color: backgroundColor,
-    //     };
-    //   };
+        return {
+          'border-color': borderColor,
+          'text-color-internal': textColor,
+          color: backgroundColor,
+        };
+      };
 
-    //   this.changeForSelector(
-    //     minimalSelector,
-    //     this.useGeneratedDefaultColors
-    //       ? calcColor(minimalSelector)
-    //       : this.findAvailableDefaultColor(this.rules),
-    //   );
-    // }
+      this.changeForSelector(
+        minimalSelector,
+        this.useGeneratedDefaultColors
+          ? calcColor(minimalSelector)
+          : this.findAvailableDefaultColor(this.rules),
+      );
+    }
     if (defaultCaption) {
       this.changeForSelector(minimalSelector, this.getDefaultNodeCaption(item));
     }
