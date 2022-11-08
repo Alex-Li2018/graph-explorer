@@ -70,6 +70,7 @@ class StyleRule {
   };
 }
 
+// 默认样式
 const DEFAULT_STYLE = {
   node: {
     diameter: '50px',
