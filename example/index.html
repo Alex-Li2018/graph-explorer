@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
-        #graph_wrap {
+        .graph-data_wrap {
             width: 800px;
             height: 400px;
             border: 1px solid red;
@@ -40,15 +40,19 @@
     </style>
 </head>
 <body>
-    <div id="graph_wrap"></div>
+    <div class="graph-data_wrap">
+        <svg id="graph_wrap"></svg>
+    </div>
     <script src="./index.js"></script>
 
     <script>
         const domRef = '#graph_wrap'
         const measureSize = () => ({
-            width: domRef.clientWidth || 200,
-            height: domRef.clientHeight || 200
+            width: document.getElementById('graph_wrap').clientWidth || 200,
+            height: document.getElementById('graph_wrap').clientHeight || 200
         })
+
+        console.log(measureSize())
         const graphData = {
             nodes: [
                 {
@@ -164,7 +168,10 @@
             false
         )
 
+        instance.resize()
+
         instance.init()
+        instance.precomputeAndStart()
     </script>
 </body>
 </html>
