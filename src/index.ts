@@ -418,5 +418,7 @@ export default class GraphVisualization {
       onGraphInteraction,
     );
     graphEventHandler.bindEventHandlers();
+
+    return graphEventHandler;
   }
 }
