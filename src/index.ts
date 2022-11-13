@@ -29,7 +29,17 @@ import {
   relationship as relationshipRenderer,
 } from './render/renderers/init';
 // import { nodeMenuRenderer } from './renderers/menu';
-import { ZoomLimitsReached, ZoomType } from './types';
+import {
+  ZoomLimitsReached,
+  ZoomType,
+  GetNodeNeighboursFn,
+  VizItem,
+} from './types';
+import {
+  GraphEventHandlerModel,
+  GraphInteraction,
+} from './GraphEventHandlerModel';
+import { GraphStats } from './utils/mapper';
 
 type MeasureSizeFn = () => { width: number; height: number };
 
@@ -107,6 +117,7 @@ export default class GraphVisualization {
     this.geometry = new GraphGeometryModel(this.style);
 
     this.zoomBehavior = d3Zoom<SVGElement, unknown>()
+      // 设置缩放的范围
       .scaleExtent([this.zoomMinScaleExtent, ZOOM_MAX_SCALE])
       .on('zoom', (e: D3ZoomEvent<SVGElement, unknown>) => {
         const isZoomClick = this.isZoomClick;
@@ -262,6 +273,7 @@ export default class GraphVisualization {
     | { scale: number; centerPointOffset: { x: number; y: number } }
     | undefined => {
     const graphSize =
+      // this.container.node()返回当前选择集的第一个元素
       this.container.node()?.getBBox && this.container.node()?.getBBox();
     const availableWidth = this.root.node()?.clientWidth;
     const availableHeight = this.root.node()?.clientHeight;
@@ -385,5 +397,26 @@ export default class GraphVisualization {
         size.height,
       ].join(' '),
     );
+  }
+
+  // init graph bind event
+  initEventHandler(
+    visualization: GraphVisualization,
+    getNodeNeighbours: GetNodeNeighboursFn,
+    onItemMouseOver: (item: VizItem) => void,
+    onItemSelect: (item: VizItem) => void,
+    onGraphModelChange: (stats: GraphStats) => void,
+    onGraphInteraction: (event: GraphInteraction) => void,
+  ) {
+    const graphEventHandler = new GraphEventHandlerModel(
+      this.graph,
+      visualization,
+      getNodeNeighbours,
+      onItemMouseOver,
+      onItemSelect,
+      onGraphModelChange,
+      onGraphInteraction,
+    );
+    graphEventHandler.bindEventHandlers();
   }
 }
