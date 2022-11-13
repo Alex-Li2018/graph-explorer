@@ -162,6 +162,34 @@ declare type VizItemProperty = {
     value: string;
     type: string;
 };
+declare type VizItem = NodeItem | ContextMenuItem | RelationshipItem | CanvasItem | StatusItem;
+declare type NodeItem = {
+    type: 'node';
+    item: Pick<NodeModel, 'id' | 'labels' | 'propertyList'>;
+};
+declare type ContextMenuItem = {
+    type: 'context-menu-item';
+    item: {
+        label: string;
+        content: string;
+        selection: string;
+    };
+};
+declare type StatusItem = {
+    type: 'status-item';
+    item: string;
+};
+declare type RelationshipItem = {
+    type: 'relationship';
+    item: Pick<RelationshipModel, 'id' | 'type' | 'propertyList'>;
+};
+declare type CanvasItem = {
+    type: 'canvas';
+    item: {
+        nodeCount: number;
+        relationshipCount: number;
+    };
+};
 declare type ZoomLimitsReached = {
     zoomInLimitReached: boolean;
     zoomOutLimitReached: boolean;
@@ -171,6 +199,7 @@ declare enum ZoomType {
     OUT = "out",
     FIT = "fit"
 }
+declare type GetNodeNeighboursFn = (node: BasicNode | NodeModel, currentNeighbourIds: string[], callback: (data: BasicNodesAndRels) => void) => void;
 
 declare class Selector {
     tag: string;
@@ -249,6 +278,48 @@ declare class ForceSimulation {
     restart(): void;
 }
 
+declare type GraphStatsLabels = Record<string, {
+    count: number;
+    properties: Record<string, string>;
+}>;
+declare type GraphStatsRelationshipTypes = Record<string, {
+    count: number;
+    properties: Record<string, string>;
+}>;
+declare type GraphStats = {
+    labels?: GraphStatsLabels;
+    relTypes?: GraphStatsRelationshipTypes;
+};
+
+declare type GraphInteraction = 'NODE_EXPAND' | 'NODE_UNPINNED' | 'NODE_DISMISSED';
+declare type GraphInteractionCallBack = (event: GraphInteraction, properties?: Record<string, unknown>) => void;
+declare class GraphEventHandlerModel {
+    getNodeNeighbours: GetNodeNeighboursFn;
+    graph: GraphModel;
+    visualization: GraphVisualization;
+    onGraphModelChange: (stats: GraphStats) => void;
+    onItemMouseOver: (item: VizItem) => void;
+    onItemSelected: (item: VizItem) => void;
+    onGraphInteraction: GraphInteractionCallBack;
+    selectedItem: NodeModel | RelationshipModel | null;
+    constructor(graph: GraphModel, visualization: GraphVisualization, getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem) => void, onItemSelected: (item: VizItem) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction?: (event: GraphInteraction) => void);
+    graphModelChanged(): void;
+    selectItem(item: NodeModel | RelationshipModel): void;
+    deselectItem(): void;
+    nodeClose(d: NodeModel): void;
+    nodeClicked(node: NodeModel): void;
+    nodeUnlock(d: NodeModel): void;
+    nodeDblClicked(d: NodeModel): void;
+    nodeCollapse(d: NodeModel): void;
+    onNodeMouseOver(node: NodeModel): void;
+    onMenuMouseOver(itemWithMenu: NodeModel): void;
+    onRelationshipMouseOver(relationship: RelationshipModel): void;
+    onRelationshipClicked(relationship: RelationshipModel): void;
+    onCanvasClicked(): void;
+    onItemMouseOut(): void;
+    bindEventHandlers(): void;
+}
+
 declare type MeasureSizeFn = () => {
     width: number;
     height: number;
@@ -292,6 +363,7 @@ declare class GraphVisualization {
     }): void;
     boundingBox(): DOMRect | undefined;
     resize(isFullscreen: boolean, wheelZoomRequiresModKey: boolean): void;
+    initEventHandler(visualization: GraphVisualization, getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem) => void, onItemSelect: (item: VizItem) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction: (event: GraphInteraction) => void): GraphEventHandlerModel;
 }
 
 export { GraphVisualization as default };

@@ -4187,24 +4187,24 @@ const selectorArrayToString = (selectors) => {
 };
 
 // map graph data
-const stringifyValues = (obj) => Object.keys(obj).map((k) => ({
+const stringifyValues$1 = (obj) => Object.keys(obj).map((k) => ({
     [k]: obj[k] === null ? 'null' : optionalToString(obj[k]),
 }));
-const mapProperties = (_) => Object.assign({}, ...stringifyValues(_));
+const mapProperties$1 = (_) => Object.assign({}, ...stringifyValues$1(_));
 function createGraph(nodes, relationships) {
     const graph = new GraphModel();
-    graph.addNodes(mapNodes(nodes));
-    graph.addRelationships(mapRelationships(relationships, graph));
+    graph.addNodes(mapNodes$1(nodes));
+    graph.addRelationships(mapRelationships$1(relationships, graph));
     return graph;
 }
-function mapNodes(nodes) {
-    return nodes.map((node) => new NodeModel(node.id, node.labels, mapProperties(node.properties), node.propertyTypes));
+function mapNodes$1(nodes) {
+    return nodes.map((node) => new NodeModel(node.id, node.labels, mapProperties$1(node.properties), node.propertyTypes));
 }
-function mapRelationships(relationships, graph) {
+function mapRelationships$1(relationships, graph) {
     return relationships.map((rel) => {
         const source = graph.findNode(rel.startNodeId);
         const target = graph.findNode(rel.endNodeId);
-        return new RelationshipModel(rel.id, source, target, rel.type, mapProperties(rel.properties), rel.propertyTypes);
+        return new RelationshipModel(rel.id, source, target, rel.type, mapProperties$1(rel.properties), rel.propertyTypes);
     });
 }
 
@@ -8661,6 +8661,7 @@ class StyleRule {
             this.selector.classes.length === selector.classes.length);
     };
 }
+// 默认样式
 const DEFAULT_STYLE = {
     node: {
         diameter: '50px',
@@ -10345,6 +10346,259 @@ var ZoomType;
     ZoomType["FIT"] = "fit";
 })(ZoomType || (ZoomType = {}));
 
+const mapProperties = (_) => Object.assign({}, ...stringifyValues(_));
+const stringifyValues = (obj) => Object.keys(obj).map((k) => ({
+    [k]: obj[k] === null ? 'null' : optionalToString(obj[k]),
+}));
+function mapNodes(nodes) {
+    return nodes.map((node) => new NodeModel(node.id, node.labels, mapProperties(node.properties), node.propertyTypes));
+}
+function mapRelationships(relationships, graph) {
+    return relationships.map((rel) => {
+        const source = graph.findNode(rel.startNodeId);
+        const target = graph.findNode(rel.endNodeId);
+        return new RelationshipModel(rel.id, source, target, rel.type, mapProperties(rel.properties), rel.propertyTypes);
+    });
+}
+function getGraphStats(graph) {
+    const labelStats = {};
+    const relTypeStats = {};
+    graph.nodes().forEach((node) => {
+        node.labels.forEach((label) => {
+            if (labelStats['*']) {
+                labelStats['*'].count = labelStats['*'].count + 1;
+            }
+            else {
+                labelStats['*'] = {
+                    count: 1,
+                    properties: {},
+                };
+            }
+            if (labelStats[label]) {
+                labelStats[label].count = labelStats[label].count + 1;
+                labelStats[label].properties = {
+                    ...labelStats[label].properties,
+                    ...node.propertyMap,
+                };
+            }
+            else {
+                labelStats[label] = {
+                    count: 1,
+                    properties: node.propertyMap,
+                };
+            }
+        });
+    });
+    graph.relationships().forEach((rel) => {
+        if (relTypeStats['*']) {
+            relTypeStats['*'].count = relTypeStats['*'].count + 1;
+        }
+        else {
+            relTypeStats['*'] = {
+                count: 1,
+                properties: {},
+            };
+        }
+        if (relTypeStats[rel.type]) {
+            relTypeStats[rel.type].count = relTypeStats[rel.type].count + 1;
+            relTypeStats[rel.type].properties = {
+                ...relTypeStats[rel.type].properties,
+                ...rel.propertyMap,
+            };
+        }
+        else {
+            relTypeStats[rel.type] = {
+                count: 1,
+                properties: rel.propertyMap,
+            };
+        }
+    });
+    return { labels: labelStats, relTypes: relTypeStats };
+}
+
+class GraphEventHandlerModel {
+    getNodeNeighbours;
+    graph;
+    visualization;
+    onGraphModelChange;
+    onItemMouseOver;
+    onItemSelected;
+    onGraphInteraction;
+    selectedItem;
+    constructor(graph, visualization, getNodeNeighbours, onItemMouseOver, onItemSelected, onGraphModelChange, onGraphInteraction) {
+        this.graph = graph;
+        this.visualization = visualization;
+        this.getNodeNeighbours = getNodeNeighbours;
+        this.selectedItem = null;
+        this.onItemMouseOver = onItemMouseOver;
+        this.onItemSelected = onItemSelected;
+        this.onGraphInteraction = onGraphInteraction ?? (() => undefined);
+        this.onGraphModelChange = onGraphModelChange;
+    }
+    graphModelChanged() {
+        this.onGraphModelChange(getGraphStats(this.graph));
+    }
+    selectItem(item) {
+        if (this.selectedItem) {
+            this.selectedItem.selected = false;
+        }
+        this.selectedItem = item;
+        item.selected = true;
+        this.visualization.update({
+            updateNodes: this.selectedItem.isNode,
+            updateRelationships: this.selectedItem.isRelationship,
+            restartSimulation: false,
+        });
+    }
+    deselectItem() {
+        if (this.selectedItem) {
+            this.selectedItem.selected = false;
+            this.visualization.update({
+                updateNodes: this.selectedItem.isNode,
+                updateRelationships: this.selectedItem.isRelationship,
+                restartSimulation: false,
+            });
+            this.selectedItem = null;
+        }
+        this.onItemSelected({
+            type: 'canvas',
+            item: {
+                nodeCount: this.graph.nodes().length,
+                relationshipCount: this.graph.relationships().length,
+            },
+        });
+    }
+    nodeClose(d) {
+        this.graph.removeConnectedRelationships(d);
+        this.graph.removeNode(d);
+        this.deselectItem();
+        this.visualization.update({
+            updateNodes: true,
+            updateRelationships: true,
+            restartSimulation: true,
+        });
+        this.graphModelChanged();
+        this.onGraphInteraction('NODE_DISMISSED');
+    }
+    nodeClicked(node) {
+        if (!node) {
+            return;
+        }
+        node.hoverFixed = false;
+        node.fx = node.x;
+        node.fy = node.y;
+        if (!node.selected) {
+            this.selectItem(node);
+            this.onItemSelected({
+                type: 'node',
+                item: node,
+            });
+        }
+        else {
+            this.deselectItem();
+        }
+    }
+    nodeUnlock(d) {
+        if (!d) {
+            return;
+        }
+        d.fx = null;
+        d.fy = null;
+        this.deselectItem();
+        this.onGraphInteraction('NODE_UNPINNED');
+    }
+    nodeDblClicked(d) {
+        if (d.expanded) {
+            this.nodeCollapse(d);
+            return;
+        }
+        d.expanded = true;
+        const graph = this.graph;
+        const visualization = this.visualization;
+        const graphModelChanged = this.graphModelChanged.bind(this);
+        this.getNodeNeighbours(d, this.graph.findNodeNeighbourIds(d.id), ({ nodes, relationships }) => {
+            graph.addExpandedNodes(d, mapNodes(nodes));
+            graph.addRelationships(mapRelationships(relationships, graph));
+            visualization.update({ updateNodes: true, updateRelationships: true });
+            graphModelChanged();
+        });
+        this.onGraphInteraction('NODE_EXPAND');
+    }
+    nodeCollapse(d) {
+        d.expanded = false;
+        this.graph.collapseNode(d);
+        this.visualization.update({ updateNodes: true, updateRelationships: true });
+        this.graphModelChanged();
+    }
+    onNodeMouseOver(node) {
+        if (!node.contextMenu) {
+            this.onItemMouseOver({
+                type: 'node',
+                item: node,
+            });
+        }
+    }
+    onMenuMouseOver(itemWithMenu) {
+        if (!itemWithMenu.contextMenu) {
+            throw new Error('menuMouseOver triggered without menu');
+        }
+        this.onItemMouseOver({
+            type: 'context-menu-item',
+            item: {
+                label: itemWithMenu.contextMenu.label,
+                content: itemWithMenu.contextMenu.menuContent,
+                selection: itemWithMenu.contextMenu.menuSelection,
+            },
+        });
+    }
+    onRelationshipMouseOver(relationship) {
+        this.onItemMouseOver({
+            type: 'relationship',
+            item: relationship,
+        });
+    }
+    onRelationshipClicked(relationship) {
+        if (!relationship.selected) {
+            this.selectItem(relationship);
+            this.onItemSelected({
+                type: 'relationship',
+                item: relationship,
+            });
+        }
+        else {
+            this.deselectItem();
+        }
+    }
+    onCanvasClicked() {
+        this.deselectItem();
+    }
+    onItemMouseOut() {
+        this.onItemMouseOver({
+            type: 'canvas',
+            item: {
+                nodeCount: this.graph.nodes().length,
+                relationshipCount: this.graph.relationships().length,
+            },
+        });
+    }
+    bindEventHandlers() {
+        this.visualization
+            .on('nodeMouseOver', this.onNodeMouseOver.bind(this))
+            .on('nodeMouseOut', this.onItemMouseOut.bind(this))
+            .on('menuMouseOver', this.onMenuMouseOver.bind(this))
+            .on('menuMouseOut', this.onItemMouseOut.bind(this))
+            .on('relMouseOver', this.onRelationshipMouseOver.bind(this))
+            .on('relMouseOut', this.onItemMouseOut.bind(this))
+            .on('relationshipClicked', this.onRelationshipClicked.bind(this))
+            .on('canvasClicked', this.onCanvasClicked.bind(this))
+            .on('nodeClose', this.nodeClose.bind(this))
+            .on('nodeClicked', this.nodeClicked.bind(this))
+            .on('nodeDblClicked', this.nodeDblClicked.bind(this))
+            .on('nodeUnlock', this.nodeUnlock.bind(this));
+        this.onItemMouseOut();
+    }
+}
+
 class GraphVisualization {
     measureSize;
     graphData;
@@ -10407,6 +10661,7 @@ class GraphVisualization {
         this.container = this.baseGroup.append('g');
         this.geometry = new GraphGeometryModel(this.style);
         this.zoomBehavior = d3Zoom()
+            // 设置缩放的范围
             .scaleExtent([this.zoomMinScaleExtent, ZOOM_MAX_SCALE])
             .on('zoom', (e) => {
             const isZoomClick = this.isZoomClick;
@@ -10522,7 +10777,9 @@ class GraphVisualization {
         }
     };
     getZoomScaleFactorToFitWholeGraph = () => {
-        const graphSize = this.container.node()?.getBBox && this.container.node()?.getBBox();
+        const graphSize = 
+        // this.container.node()返回当前选择集的第一个元素
+        this.container.node()?.getBBox && this.container.node()?.getBBox();
         const availableWidth = this.root.node()?.clientWidth;
         const availableHeight = this.root.node()?.clientHeight;
         if (graphSize && availableWidth && availableHeight) {
@@ -10611,6 +10868,12 @@ class GraphVisualization {
             size.width,
             size.height,
         ].join(' '));
+    }
+    // init graph bind event
+    initEventHandler(visualization, getNodeNeighbours, onItemMouseOver, onItemSelect, onGraphModelChange, onGraphInteraction) {
+        const graphEventHandler = new GraphEventHandlerModel(this.graph, visualization, getNodeNeighbours, onItemMouseOver, onItemSelect, onGraphModelChange, onGraphInteraction);
+        graphEventHandler.bindEventHandlers();
+        return graphEventHandler;
     }
 }
 
