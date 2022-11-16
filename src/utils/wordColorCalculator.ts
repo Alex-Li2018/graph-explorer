@@ -75,6 +75,12 @@ export function calcWordColor(word: string, config?: CalcOptions) {
     .hex();
 }
 
+/**
+ * 计算默认的样式 背景色 边框 文本样式
+ * @param nodeLabel
+ * @param config
+ * @returns Object
+ */
 export function calculateDefaultNodeColors(
   nodeLabel: string,
   config = defaultOptions,

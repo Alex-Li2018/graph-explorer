@@ -14,10 +14,10 @@
 
 |方法名|描述|
 | --- | --- |
-|formatNodeCaptions(nodes: NodeModel[]): void |
-|formatRelationshipCaptions(relationships: RelationshipModel[]): void |
-|setNodeRadii(nodes: NodeModel[]): void |
-|onGraphChange(graph: GraphModel,options = { updateNodes: true, updateRelationships: true },): void|
+|formatNodeCaptions(nodes: NodeModel[]): void |格式化节点的名称
+|formatRelationshipCaptions(relationships: RelationshipModel[]): void |格式化边的名称
+|setNodeRadii(nodes: NodeModel[]): void |设置节点的半径
+|onGraphChange(graph: GraphModel,options = { updateNodes: true, updateRelationships: true },): void|图谱数据变化触发事件
 |onTick(graph: GraphModel): void|
 
 ## class PairwiseArcsRelationshipRouting

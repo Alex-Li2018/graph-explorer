@@ -22,6 +22,11 @@ class StyleElement {
     this.props = {};
   }
 
+  /**
+   * 从当前样式规则里找到对应的选择集样式
+   * @param rules
+   * @returns
+   */
   applyRules = (rules: StyleRule[]) => {
     for (let i = 0; i < rules.length; i++) {
       const rule = rules[i];
