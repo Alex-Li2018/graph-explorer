@@ -55,10 +55,11 @@ export class GraphEventHandlerModel {
   }
 
   selectItem(item: NodeModel | RelationshipModel): void {
-    if (this.selectedItem) {
-      this.selectedItem.selected = false;
-    }
-    this.selectedItem = item;
+    // 可以选择多个
+    // if (this.selectedItem) {
+    //   this.selectedItem.selected = false;
+    // }
+    // this.selectedItem = item;
     item.selected = true;
 
     this.visualization.update({

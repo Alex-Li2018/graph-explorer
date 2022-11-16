@@ -59,7 +59,7 @@ export default class GraphVisualization {
   private graph: GraphModel;
   public style: GraphStyleModel;
 
-  // 力仿真6
+  // 力仿真
   forceSimulation: ForceSimulation;
 
   // This flags that a panning is ongoing and won't trigger
@@ -204,6 +204,7 @@ export default class GraphVisualization {
       .attr('class', 'node')
       .attr('aria-label', (d) => `graph-node${d.id}`)
       .call(nodeEventHandlers, this.trigger, this.forceSimulation.simulation)
+      // 如果被选中 那么添加对应的选择样式
       .classed('selected', (node) => node.selected);
 
     nodeRenderer.forEach((renderer) =>

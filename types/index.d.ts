@@ -211,6 +211,11 @@ declare class StyleElement {
     selector: Selector;
     props: any;
     constructor(selector: Selector);
+    /**
+     * 从当前样式规则里找到对应的选择集样式
+     * @param rules
+     * @returns
+     */
     applyRules: (rules: StyleRule[]) => this;
     get: (attr: string) => any;
 }
