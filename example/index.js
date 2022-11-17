@@ -8593,6 +8593,12 @@ function calcWordColor(word, config) {
         .lch(between(first, lightMin, lightMax) / 100, between(second, chromaMin, chromaMax) / 100, between(third, 0, 360))
         .hex();
 }
+/**
+ * 计算默认的样式 背景色 边框 文本样式
+ * @param nodeLabel
+ * @param config
+ * @returns Object
+ */
 function calculateDefaultNodeColors(nodeLabel, config = defaultOptions) {
     const bkg = calcWordColor(nodeLabel, config);
     const border = shadeColor(bkg, -20);
@@ -8622,6 +8628,11 @@ class StyleElement {
         this.selector = selector;
         this.props = {};
     }
+    /**
+     * 从当前样式规则里找到对应的选择集样式
+     * @param rules
+     * @returns
+     */
     applyRules = (rules) => {
         for (let i = 0; i < rules.length; i++) {
             const rule = rules[i];
@@ -10439,6 +10450,7 @@ class GraphEventHandlerModel {
         this.onGraphModelChange(getGraphStats(this.graph));
     }
     selectItem(item) {
+        // 可以选择多个
         if (this.selectedItem) {
             this.selectedItem.selected = false;
         }
@@ -10616,7 +10628,7 @@ class GraphVisualization {
     callbacks = {};
     graph;
     style;
-    // 力仿真6
+    // 力仿真
     forceSimulation;
     // This flags that a panning is ongoing and won't trigger
     // 'canvasClick' event when panning(平移) ends.
@@ -10727,6 +10739,7 @@ class GraphVisualization {
             .attr('class', 'node')
             .attr('aria-label', (d) => `graph-node${d.id}`)
             .call(nodeEventHandlers, this.trigger, this.forceSimulation.simulation)
+            // 如果被选中 那么添加对应的选择样式
             .classed('selected', (node) => node.selected);
         node.forEach((renderer) => nodeGroups.call(renderer.onGraphChange, this));
         // nodeMenuRenderer.forEach((renderer) =>
