@@ -1,4 +1,4 @@
-import { NodeModel } from '../models/Node';
+import { NodeModel } from '../../models/Node';
 
 export default function circular(
   nodes: NodeModel[],

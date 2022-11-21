@@ -20,10 +20,10 @@ import {
   MAX_PRECOMPUTED_TICKS,
   EXTRA_TICKS_PER_RENDER,
   VELOCITY_DECAY,
-} from '../constants';
-import { GraphModel } from '../models/Graph';
-import { NodeModel } from '../models/Node';
-import { RelationshipModel } from '../models/Relationship';
+} from '../../constants';
+import { GraphModel } from '../../models/Graph';
+import { NodeModel } from '../../models/Node';
+import { RelationshipModel } from '../../models/Relationship';
 import circular from './circular';
 
 const oneRelationshipPerPairOfNodes = (graph: GraphModel) =>

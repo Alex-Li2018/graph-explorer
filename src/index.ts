@@ -19,7 +19,7 @@ import { GraphStyleModel } from './models/GraphStyle';
 import { NodeModel } from './models/Node';
 import { RelationshipModel } from './models/Relationship';
 import { isNullish } from './utils/utils';
-import { ForceSimulation } from './force/ForceSimulation';
+import { ForceSimulation } from './layout/force/ForceSimulation';
 import {
   nodeEventHandlers,
   relationshipEventHandlers,
@@ -40,6 +40,7 @@ import {
   GraphInteraction,
 } from './GraphEventHandlerModel';
 import { GraphStats } from './utils/mapper';
+import { CircularLayout } from './layout/CircularLayout';
 
 type MeasureSizeFn = () => { width: number; height: number };
 type ZoomEvent = (limitsReached: ZoomLimitsReached) => void;
