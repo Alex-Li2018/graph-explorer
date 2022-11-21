@@ -63,7 +63,7 @@ export const nodeEventHandlers = (
       Math.pow(initialDragPosition[1] - event.y, 2);
 
     // This is to prevent clicks/double clicks from restarting the simulation
-    if (dist > tolerance && !restartedSimulation) {
+    if (dist > tolerance && !restartedSimulation && simulation) {
       // Set alphaTarget to a value higher than alphaMin so the simulation
       // isn't stopped while nodes are being dragged.
       simulation
@@ -79,7 +79,7 @@ export const nodeEventHandlers = (
   };
 
   const dragended = (_event: D3DragEvent<SVGGElement, NodeModel, any>) => {
-    if (restartedSimulation) {
+    if (restartedSimulation && simulation) {
       // Reset alphaTarget so the simulation cools down and stops.
       simulation.alphaTarget(DEFAULT_ALPHA_TARGET);
     }

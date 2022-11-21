@@ -264,7 +264,7 @@ export default class GraphVisualization {
       .join('g')
       .attr('class', 'node')
       .attr('aria-label', (d) => `graph-node${d.id}`)
-      .call(nodeEventHandlers, this.trigger)
+      .call(nodeEventHandlers, this.trigger, this.forceSimulation)
       // 如果被选中 那么添加对应的选择样式
       .classed('selected', (node) => node.selected);
 
