@@ -168,7 +168,7 @@ export class Circular {
 
   public edges: RelationshipModel[] = [];
 
-  private nodeMap: IndexMap = {};
+  // private nodeMap: IndexMap = {};
 
   private degrees: Degree[] = [];
 
@@ -250,7 +250,7 @@ export class Circular {
     nodes.forEach((node, i) => {
       nodeMap[node.id] = i;
     });
-    self.nodeMap = nodeMap;
+    // self.nodeMap = nodeMap;
     const degrees = getDegree(nodes.length, nodeMap, edges);
     self.degrees = degrees;
     // 设置了节点的间距

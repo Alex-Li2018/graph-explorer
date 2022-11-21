@@ -133,6 +133,7 @@ declare class NodeModel {
     fy: number | null;
     hoverFixed: boolean;
     initialPositionCalculated: boolean;
+    degree: number;
     constructor(id: string, labels: string[], properties: NodeProperties, propertyTypes: Record<string, string>);
     toJSON(): NodeProperties;
     relationshipCount(graph: GraphModel): number;
@@ -200,6 +201,7 @@ declare enum ZoomType {
     FIT = "fit"
 }
 declare type GetNodeNeighboursFn = (node: BasicNode | NodeModel, currentNeighbourIds: string[], callback: (data: BasicNodesAndRels) => void) => void;
+declare type LayoutType = 'force' | 'cricular' | 'cascade';
 
 declare class Selector {
     tag: string;
@@ -329,10 +331,13 @@ declare type MeasureSizeFn = () => {
     width: number;
     height: number;
 };
+declare type ZoomEvent = (limitsReached: ZoomLimitsReached) => void;
+declare type VoidEvent = () => void;
 declare class GraphVisualization {
     private measureSize;
     graphData: BasicNodesAndRels;
     isFullscreen: boolean;
+    layout: LayoutType;
     wheelZoomRequiresModKey?: boolean | undefined;
     private initialZoomToFit?;
     private readonly root;
@@ -343,32 +348,38 @@ declare class GraphVisualization {
     private zoomBehavior;
     private zoomMinScaleExtent;
     private callbacks;
-    private graph;
+    graph: GraphModel;
     style: GraphStyleModel;
     forceSimulation: ForceSimulation;
     private draw;
     private isZoomClick;
-    constructor(element: SVGElement, measureSize: MeasureSizeFn, onZoomEvent: (limitsReached: ZoomLimitsReached) => void, onDisplayZoomWheelInfoMessage: () => void, graphData: BasicNodesAndRels, isFullscreen: boolean, wheelZoomRequiresModKey?: boolean | undefined, initialZoomToFit?: boolean | undefined);
-    private render;
+    constructor(element: SVGElement, measureSize: MeasureSizeFn, graphData: BasicNodesAndRels, isFullscreen: boolean, layout: LayoutType, onZoomEvent?: ZoomEvent, onDisplayZoomWheelInfoMessage?: VoidEvent, wheelZoomRequiresModKey?: boolean | undefined, initialZoomToFit?: boolean | undefined);
+    private initConfig;
+    private initGraphData;
+    private initStyle;
+    private innitContainer;
+    private containerZoomEvent;
+    private initLayoutController;
+    init(): void;
+    update(options: {
+        updateNodes: boolean;
+        updateRelationships: boolean;
+        restartSimulation?: boolean;
+    }): void;
     private updateNodes;
     private updateRelationships;
+    private render;
     zoomByType: (zoomType: ZoomType) => void;
     private zoomToFitViewport;
     private getZoomScaleFactorToFitWholeGraph;
     private adjustZoomMinScaleExtentToFitGraph;
     on: (event: string, callback: (...args: any[]) => void) => this;
     trigger: (event: string, ...args: any[]) => void;
-    init(): void;
     setInitialZoom(): void;
     precomputeAndStart(): void;
-    update(options: {
-        updateNodes: boolean;
-        updateRelationships: boolean;
-        restartSimulation?: boolean;
-    }): void;
     boundingBox(): DOMRect | undefined;
-    resize(isFullscreen: boolean, wheelZoomRequiresModKey: boolean): void;
-    initEventHandler(visualization: GraphVisualization, getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem) => void, onItemSelect: (item: VizItem) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction: (event: GraphInteraction) => void): GraphEventHandlerModel;
+    resize(isFullscreen: boolean, wheelZoomRequiresModKey: boolean | undefined): void;
+    initEventHandler(getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem) => void, onItemSelect: (item: VizItem) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction: (event: GraphInteraction) => void): GraphEventHandlerModel;
 }
 
 export { GraphVisualization as default };

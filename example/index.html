@@ -136,15 +136,11 @@
         const instance = new GraphVisualization(
             domRef,
             measureSize,
-            function() {},
-            function() {},
             graphData,
-            false
+            false,
+            'force',
         )
 
-        instance.resize()
-
-        instance.init()
         instance.precomputeAndStart()
         function GetNodeNeighboursFn(node, currentNeighbourIds, ) {
             console.log(node, currentNeighbourIds)

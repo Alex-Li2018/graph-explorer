@@ -4076,6 +4076,8 @@ class NodeModel {
     fy = null;
     hoverFixed;
     initialPositionCalculated;
+    // 节点的度
+    degree;
     constructor(id, labels, properties, propertyTypes) {
         this.id = id;
         this.labels = labels;
@@ -4095,6 +4097,7 @@ class NodeModel {
         this.y = 0;
         this.hoverFixed = false;
         this.initialPositionCalculated = false;
+        this.degree = 0;
     }
     toJSON() {
         return this.propertyMap;
@@ -4155,6 +4158,7 @@ class RelationshipModel {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 function isNullish(x) {
     return x === null || x === undefined;
 }
@@ -10058,7 +10062,7 @@ function forceY(y) {
   return force;
 }
 
-function circularLayout(nodes, center, radius) {
+function circular(nodes, center, radius) {
     const unlocatedNodes = nodes.filter((node) => !node.initialPositionCalculated);
     unlocatedNodes.forEach((node, i) => {
         node.x =
@@ -10093,7 +10097,7 @@ class ForceSimulation {
             x: 0,
             y: 0,
         };
-        circularLayout(nodes, center, radius);
+        circular(nodes, center, radius);
         this.simulation
             .nodes(nodes)
             .force('collide', forceCollide().radius(FORCE_COLLIDE_RADIUS));
@@ -10615,6 +10619,7 @@ class GraphVisualization {
     measureSize;
     graphData;
     isFullscreen;
+    layout;
     wheelZoomRequiresModKey;
     initialZoomToFit;
     root;
@@ -10634,21 +10639,46 @@ class GraphVisualization {
     // 'canvasClick' event when panning(平移) ends.
     draw = false;
     isZoomClick = false;
-    constructor(element, measureSize, onZoomEvent, onDisplayZoomWheelInfoMessage, graphData, 
+    constructor(element, measureSize, graphData, 
     // public style: GraphStyleModel,
-    isFullscreen, wheelZoomRequiresModKey, initialZoomToFit) {
+    isFullscreen, layout, onZoomEvent, onDisplayZoomWheelInfoMessage, wheelZoomRequiresModKey, initialZoomToFit) {
         this.measureSize = measureSize;
         this.graphData = graphData;
         this.isFullscreen = isFullscreen;
+        this.layout = layout;
         this.wheelZoomRequiresModKey = wheelZoomRequiresModKey;
         this.initialZoomToFit = initialZoomToFit;
         this.root = d3Select(element);
-        // init graph data
-        this.graph = createGraph(graphData.nodes, graphData.relationships);
-        // init graph style
-        this.style = new GraphStyleModel();
+        this.initConfig(isFullscreen, layout, wheelZoomRequiresModKey);
+        this.initGraphData(graphData);
+        this.initStyle();
+        this.innitContainer(measureSize);
+        this.containerZoomEvent(onZoomEvent, onDisplayZoomWheelInfoMessage);
+        // 设置
+        this.resize(this.isFullscreen, this.wheelZoomRequiresModKey);
+        this.initLayoutController();
+        // 初始化所有节点 边
+        this.init();
+    }
+    // 初始化配置
+    initConfig(isFullscreen, layout, wheelZoomRequiresModKey) {
+        this.layout = layout;
         this.isFullscreen = isFullscreen;
         this.wheelZoomRequiresModKey = wheelZoomRequiresModKey;
+    }
+    // 初始化图谱数据
+    initGraphData(graphData) {
+        // init graph data
+        this.graph = createGraph(graphData.nodes, graphData.relationships);
+    }
+    // 初始化样式
+    initStyle() {
+        // init graph style
+        this.style = new GraphStyleModel();
+        this.geometry = new GraphGeometryModel(this.style);
+    }
+    // 初始化容器
+    innitContainer(measureSize) {
         // Remove the base group element when re-creating the visualization
         this.root.selectAll('g').remove();
         this.baseGroup = this.root.append('g').attr('transform', 'translate(0,0)');
@@ -10671,7 +10701,9 @@ class GraphVisualization {
         });
         // node relation container
         this.container = this.baseGroup.append('g');
-        this.geometry = new GraphGeometryModel(this.style);
+    }
+    // 容器缩放事件
+    containerZoomEvent(onZoomEvent, onDisplayZoomWheelInfoMessage) {
         this.zoomBehavior = d3Zoom()
             // 设置缩放的范围
             .scaleExtent([this.zoomMinScaleExtent, ZOOM_MAX_SCALE])
@@ -10684,7 +10716,7 @@ class GraphVisualization {
                 zoomInLimitReached: currentZoomScale >= ZOOM_MAX_SCALE,
                 zoomOutLimitReached: currentZoomScale <= this.zoomMinScaleExtent,
             };
-            onZoomEvent(limitsReached);
+            onZoomEvent && onZoomEvent(limitsReached);
             return this.container
                 .transition()
                 .duration(isZoomClick ? 400 : 20)
@@ -10701,7 +10733,7 @@ class GraphVisualization {
             if (e.type === 'wheel') {
                 const modKeySelected = e.metaKey || e.ctrlKey || e.shiftKey;
                 if (this.wheelZoomRequiresModKey && !modKeySelected) {
-                    onDisplayZoomWheelInfoMessage();
+                    onDisplayZoomWheelInfoMessage && onDisplayZoomWheelInfoMessage();
                     return false;
                 }
             }
@@ -10712,18 +10744,38 @@ class GraphVisualization {
             // Single click is not panning
             .on('click.zoom', () => (this.draw = false))
             .on('dblclick.zoom', null);
-        this.forceSimulation = new ForceSimulation(this.render.bind(this));
     }
-    render() {
-        this.geometry.onTick(this.graph);
-        const nodeGroups = this.container
-            .selectAll('g.node')
-            .attr('transform', (d) => `translate(${d.x},${d.y})`);
-        node.forEach((renderer) => nodeGroups.call(renderer.onTick, this));
-        const relationshipGroups = this.container
-            .selectAll('g.relationship')
-            .attr('transform', (d) => `translate(${d.source.x} ${d.source.y}) rotate(${d.naturalAngle + 180})`);
-        relationship.forEach((renderer) => relationshipGroups.call(renderer.onTick, this));
+    // 初始化布局
+    initLayoutController() {
+        switch (this.layout) {
+            case 'force':
+                this.forceSimulation = new ForceSimulation(this.render.bind(this));
+                break;
+        }
+    }
+    // 初始化节点 边以及缩放比例
+    init() {
+        this.container
+            .selectAll('g.layer')
+            .data(['relationships', 'nodes'])
+            .join('g')
+            .attr('class', (d) => `layer ${d}`);
+        this.updateNodes();
+        this.updateRelationships();
+        this.adjustZoomMinScaleExtentToFitGraph();
+        this.setInitialZoom();
+    }
+    update(options) {
+        if (options.updateNodes) {
+            this.updateNodes();
+        }
+        if (options.updateRelationships) {
+            this.updateRelationships();
+        }
+        if (options.restartSimulation ?? true) {
+            this.forceSimulation.restart();
+        }
+        this.trigger('updated');
     }
     updateNodes() {
         const nodes = this.graph.nodes();
@@ -10738,15 +10790,13 @@ class GraphVisualization {
             .join('g')
             .attr('class', 'node')
             .attr('aria-label', (d) => `graph-node${d.id}`)
-            .call(nodeEventHandlers, this.trigger, this.forceSimulation.simulation)
+            .call(nodeEventHandlers, this.trigger)
             // 如果被选中 那么添加对应的选择样式
             .classed('selected', (node) => node.selected);
         node.forEach((renderer) => nodeGroups.call(renderer.onGraphChange, this));
-        // nodeMenuRenderer.forEach((renderer) =>
-        //   nodeGroups.call(renderer.onGraphChange, this),
-        // );
-        this.forceSimulation.updateNodes(this.graph);
-        this.forceSimulation.updateRelationships(this.graph);
+        this.layout === 'force' && this.forceSimulation.updateNodes(this.graph);
+        this.layout === 'force' &&
+            this.forceSimulation.updateRelationships(this.graph);
     }
     updateRelationships() {
         const relationships = this.graph.relationships();
@@ -10763,7 +10813,19 @@ class GraphVisualization {
             .call(relationshipEventHandlers, this.trigger)
             .classed('selected', (relationship) => relationship.selected);
         relationship.forEach((renderer) => relationshipGroups.call(renderer.onGraphChange, this));
-        this.forceSimulation.updateRelationships(this.graph);
+        this.layout === 'force' &&
+            this.forceSimulation.updateRelationships(this.graph);
+    }
+    render() {
+        this.geometry.onTick(this.graph);
+        const nodeGroups = this.container
+            .selectAll('g.node')
+            .attr('transform', (d) => `translate(${d.x},${d.y})`);
+        node.forEach((renderer) => nodeGroups.call(renderer.onTick, this));
+        const relationshipGroups = this.container
+            .selectAll('g.relationship')
+            .attr('transform', (d) => `translate(${d.source.x} ${d.source.y}) rotate(${d.naturalAngle + 180})`);
+        relationship.forEach((renderer) => relationshipGroups.call(renderer.onTick, this));
     }
     zoomByType = (zoomType) => {
         this.draw = true;
@@ -10831,19 +10893,9 @@ class GraphVisualization {
     };
     trigger = (event, ...args) => {
         const callbacksForEvent = this.callbacks[event] ?? [];
+        // eslint-disable-next-line prefer-spread
         callbacksForEvent.forEach((callback) => callback.apply(null, args));
     };
-    init() {
-        this.container
-            .selectAll('g.layer')
-            .data(['relationships', 'nodes'])
-            .join('g')
-            .attr('class', (d) => `layer ${d}`);
-        this.updateNodes();
-        this.updateRelationships();
-        this.adjustZoomMinScaleExtentToFitGraph();
-        this.setInitialZoom();
-    }
     setInitialZoom() {
         const count = this.graph.nodes().length;
         // chosen by *feel* (graph fitting guesstimate)
@@ -10853,25 +10905,14 @@ class GraphVisualization {
     precomputeAndStart() {
         this.forceSimulation.precomputeAndStart(() => this.initialZoomToFit && this.zoomByType(ZoomType.FIT));
     }
-    update(options) {
-        if (options.updateNodes) {
-            this.updateNodes();
-        }
-        if (options.updateRelationships) {
-            this.updateRelationships();
-        }
-        if (options.restartSimulation ?? true) {
-            this.forceSimulation.restart();
-        }
-        this.trigger('updated');
-    }
     boundingBox() {
         return this.container.node()?.getBBox();
     }
     resize(isFullscreen, wheelZoomRequiresModKey) {
         const size = this.measureSize();
-        this.isFullscreen = isFullscreen;
-        this.wheelZoomRequiresModKey = wheelZoomRequiresModKey;
+        this.isFullscreen = isFullscreen || this.isFullscreen;
+        this.wheelZoomRequiresModKey =
+            wheelZoomRequiresModKey || this.wheelZoomRequiresModKey;
         this.rect
             .attr('x', () => -Math.floor(size.width / 2))
             .attr('y', () => -Math.floor(size.height / 2));
@@ -10883,8 +10924,8 @@ class GraphVisualization {
         ].join(' '));
     }
     // init graph bind event
-    initEventHandler(visualization, getNodeNeighbours, onItemMouseOver, onItemSelect, onGraphModelChange, onGraphInteraction) {
-        const graphEventHandler = new GraphEventHandlerModel(this.graph, visualization, getNodeNeighbours, onItemMouseOver, onItemSelect, onGraphModelChange, onGraphInteraction);
+    initEventHandler(getNodeNeighbours, onItemMouseOver, onItemSelect, onGraphModelChange, onGraphInteraction) {
+        const graphEventHandler = new GraphEventHandlerModel(this.graph, this, getNodeNeighbours, onItemMouseOver, onItemSelect, onGraphModelChange, onGraphInteraction);
         graphEventHandler.bindEventHandlers();
         return graphEventHandler;
     }

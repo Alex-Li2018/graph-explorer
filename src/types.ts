@@ -86,7 +86,7 @@ export type GetNodeNeighboursFn = (
   callback: (data: BasicNodesAndRels) => void,
 ) => void;
 
-export type LayoutType = 'force' | 'cricle' | 'cascade';
+export type LayoutType = 'force' | 'cricular' | 'cascade';
 
 export type PointTuple = [number, number];
 
