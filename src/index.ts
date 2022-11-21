@@ -64,6 +64,8 @@ export default class GraphVisualization {
 
   // 力仿真
   forceSimulation: ForceSimulation;
+  // 环形布局
+  circularlayout: CircularLayout;
 
   // This flags that a panning is ongoing and won't trigger
   // 'canvasClick' event when panning(平移) ends.
@@ -92,9 +94,10 @@ export default class GraphVisualization {
     // 设置
     this.resize(this.isFullscreen, this.wheelZoomRequiresModKey);
 
-    this.initLayoutController();
     // 初始化所有节点 边
     this.init();
+
+    this.initLayoutController();
   }
 
   // 初始化配置
@@ -148,6 +151,7 @@ export default class GraphVisualization {
 
     // node relation container
     this.container = this.baseGroup.append('g');
+    this.container.classed('container-layer');
   }
 
   // 容器缩放事件
@@ -209,6 +213,31 @@ export default class GraphVisualization {
         this.forceSimulation = new ForceSimulation(this.render.bind(this));
         break;
       case 'cricular':
+        const size = this.measureSize();
+
+        this.circularlayout = new CircularLayout({
+          type: 'circular',
+          center: [0, 0],
+          width: size.width,
+          height: size.height,
+          startRadius: null,
+          endRadius: null,
+          clockwise: true,
+          ordering: 'degree',
+          nodeSpacing: 20,
+          nodeSize: 25,
+          startAngle: 0,
+          endAngle: 2 * Math.PI,
+          nodes: this.graph.nodes(),
+          edges: this.graph.relationships(),
+        });
+
+        this.circularlayout.execute();
+
+        this.render();
+        setTimeout(() => {
+          this.zoomToFitViewport();
+        }, 0);
         break;
       case 'cascade':
         break;
@@ -354,6 +383,7 @@ export default class GraphVisualization {
     }
   };
 
+  // 获取适配整个图谱的缩放大小
   private getZoomScaleFactorToFitWholeGraph = ():
     | { scale: number; centerPointOffset: { x: number; y: number } }
     | undefined => {

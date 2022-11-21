@@ -115,5 +115,9 @@ export interface CircularLayoutOptions {
   workerEnabled?: boolean;
   startAngle?: number;
   endAngle?: number;
+  nodes: NodeModel[];
+  edges: RelationshipModel[];
+  nodeSpacing?: ((d?: unknown) => number) | number | undefined;
+  nodeSize?: number | undefined;
   onLayoutEnd?: () => void;
 }

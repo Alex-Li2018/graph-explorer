@@ -127,7 +127,7 @@ export const getFuncByUnknownType = (
   return () => defaultValue;
 };
 
-export class Circular {
+export class CircularLayout {
   /** 布局中心 */
   public center: PointTuple | undefined;
 

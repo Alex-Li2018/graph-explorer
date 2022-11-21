@@ -4159,6 +4159,8 @@ class RelationshipModel {
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
+const isFunction = (val) => typeof val === 'function';
+const isNumber = (val) => typeof val === 'number';
 function isNullish(x) {
     return x === null || x === undefined;
 }
@@ -4188,6 +4190,37 @@ const selectorStringToArray = (selector) => {
 const selectorArrayToString = (selectors) => {
     const escaped = selectors.map((r) => r.replace(/\./g, '\\.'));
     return escaped.join('.');
+};
+// 获取节点的度
+const getDegree = (n, nodeIdxMap, edges) => {
+    const degrees = [];
+    for (let i = 0; i < n; i++) {
+        degrees[i] = {
+            in: 0,
+            out: 0,
+            all: 0,
+        };
+    }
+    if (!edges)
+        return degrees;
+    edges.forEach((e) => {
+        const source = getEdgeTerminal(e, 'source');
+        const target = getEdgeTerminal(e, 'target');
+        if (source && degrees[nodeIdxMap[source]]) {
+            degrees[nodeIdxMap[source]].out += 1;
+            degrees[nodeIdxMap[source]].all += 1;
+        }
+        if (target && degrees[nodeIdxMap[target]]) {
+            degrees[nodeIdxMap[target]].in += 1;
+            degrees[nodeIdxMap[target]].all += 1;
+        }
+    });
+    return degrees;
+};
+// 获取边开始节点 结束节点的ID
+const getEdgeTerminal = (RelationshipModel, type) => {
+    const terminal = RelationshipModel[type];
+    return terminal?.id;
 };
 
 // map graph data
@@ -10166,7 +10199,7 @@ const nodeEventHandlers = (selection, trigger, simulation) => {
         const dist = Math.pow(initialDragPosition[0] - event.x, 2) +
             Math.pow(initialDragPosition[1] - event.y, 2);
         // This is to prevent clicks/double clicks from restarting the simulation
-        if (dist > tolerance && !restartedSimulation) {
+        if (dist > tolerance && !restartedSimulation && simulation) {
             // Set alphaTarget to a value higher than alphaMin so the simulation
             // isn't stopped while nodes are being dragged.
             simulation
@@ -10180,7 +10213,7 @@ const nodeEventHandlers = (selection, trigger, simulation) => {
         node.fy = event.y;
     };
     const dragended = (_event) => {
-        if (restartedSimulation) {
+        if (restartedSimulation && simulation) {
             // Reset alphaTarget so the simulation cools down and stops.
             simulation.alphaTarget(DEFAULT_ALPHA_TARGET);
         }
@@ -10615,6 +10648,374 @@ class GraphEventHandlerModel {
     }
 }
 
+const isObject = (val) => val !== null && typeof val === 'object';
+
+// function initHierarchy(
+//   nodes: NodeModel[],
+//   edges: RelationshipModel[],
+//   nodeMap: IndexMap,
+//   directed: boolean,
+// ) {
+//   nodes.forEach((_, i: number) => {
+//     nodes[i].children = [];
+//     nodes[i].parent = [];
+//   });
+//   if (directed) {
+//     edges.forEach((e) => {
+//       const source = getEdgeTerminal(e, 'source');
+//       const target = getEdgeTerminal(e, 'target');
+//       let sourceIdx = 0;
+//       if (source) {
+//         sourceIdx = nodeMap[source];
+//       }
+//       let targetIdx = 0;
+//       if (target) {
+//         targetIdx = nodeMap[target];
+//       }
+//       const child = nodes[sourceIdx].children!;
+//       const parent = nodes[targetIdx].parent!;
+//       child.push(nodes[targetIdx].id);
+//       parent.push(nodes[sourceIdx].id);
+//     });
+//   } else {
+//     edges.forEach((e) => {
+//       const source = getEdgeTerminal(e, 'source');
+//       const target = getEdgeTerminal(e, 'target');
+//       let sourceIdx = 0;
+//       if (source) {
+//         sourceIdx = nodeMap[source];
+//       }
+//       let targetIdx = 0;
+//       if (target) {
+//         targetIdx = nodeMap[target];
+//       }
+//       const sourceChildren = nodes[sourceIdx].children!;
+//       const targetChildren = nodes[targetIdx].children!;
+//       sourceChildren.push(nodes[targetIdx].id);
+//       targetChildren.push(nodes[sourceIdx].id);
+//     });
+//   }
+// }
+// function connect(a: NodeModel, b: NodeModel, edges: RelationshipModel[]) {
+//   const m = edges.length;
+//   for (let i = 0; i < m; i++) {
+//     const source = getEdgeTerminal(edges[i], 'source');
+//     const target = getEdgeTerminal(edges[i], 'target');
+//     if (
+//       (a.id === source && b.id === target) ||
+//       (b.id === source && a.id === target)
+//     ) {
+//       return true;
+//     }
+//   }
+//   return false;
+// }
+function compareDegree(a, b) {
+    const aDegree = a.degree;
+    const bDegree = b.degree;
+    if (aDegree < bDegree) {
+        return -1;
+    }
+    if (aDegree > bDegree) {
+        return 1;
+    }
+    return 0;
+}
+const getFuncByUnknownType = (defaultValue, value, resultIsNumber = true) => {
+    if (!value && value !== 0) {
+        return (d) => {
+            if (d.size) {
+                if (Array.isArray(d.size))
+                    return d.size[0] > d.size[1] ? d.size[0] : d.size[1];
+                if (isObject(d.size))
+                    return d.size.width > d.size.height ? d.size.width : d.size.height;
+                return d.size;
+            }
+            return defaultValue;
+        };
+    }
+    if (isFunction(value)) {
+        return value;
+    }
+    if (isNumber(value)) {
+        return () => value;
+    }
+    if (Array.isArray(value)) {
+        return () => {
+            if (resultIsNumber) {
+                const max = Math.max(...value);
+                return isNaN(max) ? defaultValue : max;
+            }
+            return value;
+        };
+    }
+    if (isObject(value)) {
+        return () => {
+            if (resultIsNumber) {
+                const max = Math.max(value.width, value.height);
+                return isNaN(max) ? defaultValue : max;
+            }
+            return [value.width, value.height];
+        };
+    }
+    return () => defaultValue;
+};
+class CircularLayout {
+    /** 布局中心 */
+    center;
+    /** 固定半径，若设置了 radius，则 startRadius 与 endRadius 不起效 */
+    radius = null;
+    /** 节点间距，若设置 nodeSpacing，则 radius 将被自动计算，即设置 radius 不生效 */
+    nodeSpacing;
+    /** 节点大小，配合 nodeSpacing，一起用于计算 radius。若不配置，节点大小默认为 30 */
+    nodeSize = undefined;
+    /** 起始半径 */
+    startRadius = null;
+    /** 终止半径 */
+    endRadius = null;
+    /** 起始角度 */
+    startAngle = 0;
+    /** 终止角度 */
+    endAngle = 2 * Math.PI;
+    /** 是否顺时针 */
+    clockwise = true;
+    /** 节点在环上分成段数（几个段将均匀分布），在 endRadius - startRadius != 0 时生效 */
+    divisions = 1;
+    /** 节点在环上排序的依据，可选: 'topology', 'degree', 'null' */
+    ordering = null;
+    /** how many 2*pi from first to last nodes */
+    angleRatio = 1;
+    nodes = [];
+    edges = [];
+    // private nodeMap: IndexMap = {};
+    degrees = [];
+    width = 300;
+    height = 300;
+    onLayoutEnd;
+    constructor(options) {
+        this.updateConfig(options);
+    }
+    updateConfig(cfg) {
+        if (cfg) {
+            Object.assign(this, cfg);
+        }
+    }
+    getDefaultConfig() {
+        return {
+            radius: null,
+            startRadius: null,
+            endRadius: null,
+            startAngle: 0,
+            endAngle: 2 * Math.PI,
+            clockwise: true,
+            divisions: 1,
+            ordering: null,
+            angleRatio: 1,
+        };
+    }
+    /**
+     * 执行布局
+     */
+    execute() {
+        const self = this;
+        const nodes = self.nodes;
+        const edges = self.edges;
+        const n = nodes.length;
+        if (n === 0) {
+            if (self.onLayoutEnd)
+                self.onLayoutEnd();
+            return;
+        }
+        if (!self.width && typeof window !== 'undefined') {
+            self.width = window.innerWidth;
+        }
+        if (!self.height && typeof window !== 'undefined') {
+            self.height = window.innerHeight;
+        }
+        if (!self.center) {
+            self.center = [self.width / 2, self.height / 2];
+        }
+        const center = self.center;
+        if (n === 1) {
+            nodes[0].x = center[0];
+            nodes[0].y = center[1];
+            if (self.onLayoutEnd)
+                self.onLayoutEnd();
+            return;
+        }
+        let { radius, startRadius, endRadius } = self;
+        const { divisions, startAngle, endAngle, angleRatio, ordering, clockwise, nodeSpacing: paramNodeSpacing, nodeSize: paramNodeSize, } = self;
+        const angleStep = (endAngle - startAngle) / n;
+        // layout
+        const nodeMap = {};
+        nodes.forEach((node, i) => {
+            nodeMap[node.id] = i;
+        });
+        // self.nodeMap = nodeMap;
+        const degrees = getDegree(nodes.length, nodeMap, edges);
+        self.degrees = degrees;
+        // 设置了节点的间距
+        if (paramNodeSpacing) {
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            const nodeSpacing = getFuncByUnknownType(10, paramNodeSpacing);
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            const nodeSize = getFuncByUnknownType(10, paramNodeSize);
+            let maxNodeSize = -Infinity;
+            nodes.forEach((node) => {
+                const nSize = nodeSize(node);
+                if (maxNodeSize < nSize)
+                    maxNodeSize = nSize;
+            });
+            let length = 0;
+            nodes.forEach((node, i) => {
+                if (i === 0)
+                    length += maxNodeSize || 10;
+                else
+                    length += (nodeSpacing(node) || 0) + (maxNodeSize || 10);
+            });
+            radius = length / (2 * Math.PI);
+            // 未设置了半径 开始角度 结束角度
+        }
+        else if (!radius && !startRadius && !endRadius) {
+            radius = self.height > self.width ? self.width / 2 : self.height / 2;
+        }
+        else if (!startRadius && endRadius) {
+            startRadius = endRadius;
+        }
+        else if (startRadius && !endRadius) {
+            endRadius = startRadius;
+        }
+        const astep = angleStep * angleRatio;
+        // 节点布局顺序
+        let layoutNodes = [];
+        // if (ordering === 'topology') {
+        //   // layout according to the topology
+        //   layoutNodes = self.topologyOrdering();
+        // } else if (ordering === 'topology-directed') {
+        //   // layout according to the topology
+        //   layoutNodes = self.topologyOrdering(true);
+        // } else
+        if (ordering === 'degree') {
+            // layout according to the descent order of degrees
+            layoutNodes = self.degreeOrdering();
+        }
+        else {
+            // layout according to the original order in the data.nodes
+            layoutNodes = nodes;
+        }
+        const divN = Math.ceil(n / divisions); // node number in each division
+        for (let i = 0; i < n; ++i) {
+            let r = radius;
+            if (!r && startRadius !== null && endRadius !== null) {
+                r = startRadius + (i * (endRadius - startRadius)) / (n - 1);
+            }
+            if (!r) {
+                r = 10 + (i * 100) / (n - 1);
+            }
+            let angle = startAngle +
+                (i % divN) * astep +
+                ((2 * Math.PI) / divisions) * Math.floor(i / divN);
+            if (!clockwise) {
+                angle =
+                    endAngle -
+                        (i % divN) * astep -
+                        ((2 * Math.PI) / divisions) * Math.floor(i / divN);
+            }
+            layoutNodes[i].x = center[0] + Math.cos(angle) * r;
+            layoutNodes[i].y = center[1] + Math.sin(angle) * r;
+            layoutNodes[i].degree = degrees[i].all;
+        }
+        self.onLayoutEnd?.();
+        return {
+            nodes: layoutNodes,
+            edges: this.edges,
+        };
+    }
+    /**
+     * 根据节点的拓扑结构排序
+     * @return {array} orderedNodes 排序后的结果
+     */
+    // public topologyOrdering(directed = false) {
+    // const self = this;
+    // const degrees = self.degrees;
+    // const edges = self.edges;
+    // const nodes = self.nodes;
+    // const cnodes = clone(nodes);
+    // const nodeMap = self.nodeMap;
+    // const orderedCNodes = [cnodes[0]];
+    // const resNodes = [nodes[0]];
+    // const pickFlags: boolean[] = [];
+    // const n = nodes.length;
+    // pickFlags[0] = true;
+    // initHierarchy(cnodes, edges, nodeMap, directed);
+    // let k = 0;
+    // cnodes.forEach((cnode, i) => {
+    //   if (i !== 0) {
+    //     if (
+    //       (i === n - 1 ||
+    //         degrees[i].all !== degrees[i + 1].all ||
+    //         connect(orderedCNodes[k], cnode, edges)) &&
+    //       !pickFlags[i]
+    //     ) {
+    //       orderedCNodes.push(cnode);
+    //       resNodes.push(nodes[nodeMap[cnode.id]]);
+    //       pickFlags[i] = true;
+    //       k++;
+    //     } else {
+    //       const children = orderedCNodes[k].children!;
+    //       let foundChild = false;
+    //       for (let j = 0; j < children.length; j++) {
+    //         const childIdx = nodeMap[children[j]];
+    //         if (
+    //           degrees[childIdx].all === degrees[i].all &&
+    //           !pickFlags[childIdx]
+    //         ) {
+    //           orderedCNodes.push(cnodes[childIdx]);
+    //           resNodes.push(nodes[nodeMap[cnodes[childIdx].id]]);
+    //           pickFlags[childIdx] = true;
+    //           foundChild = true;
+    //           break;
+    //         }
+    //       }
+    //       let ii = 0;
+    //       while (!foundChild) {
+    //         if (!pickFlags[ii]) {
+    //           orderedCNodes.push(cnodes[ii]);
+    //           resNodes.push(nodes[nodeMap[cnodes[ii].id]]);
+    //           pickFlags[ii] = true;
+    //           foundChild = true;
+    //         }
+    //         ii++;
+    //         if (ii === n) {
+    //           break;
+    //         }
+    //       }
+    //     }
+    //   }
+    // });
+    // return resNodes;
+    // }
+    /**
+     * 根据节点度数大小排序
+     * @return {array} orderedNodes 排序后的结果
+     */
+    degreeOrdering() {
+        const self = this;
+        const nodes = self.nodes;
+        const orderedNodes = [];
+        const degrees = self.degrees;
+        nodes.forEach((node, i) => {
+            node.degree = degrees[i].all;
+            orderedNodes.push(node);
+        });
+        orderedNodes.sort(compareDegree);
+        return orderedNodes;
+    }
+    getType() {
+        return 'circular';
+    }
+}
+
 class GraphVisualization {
     measureSize;
     graphData;
@@ -10635,6 +11036,8 @@ class GraphVisualization {
     style;
     // 力仿真
     forceSimulation;
+    // 环形布局
+    circularlayout;
     // This flags that a panning is ongoing and won't trigger
     // 'canvasClick' event when panning(平移) ends.
     draw = false;
@@ -10656,9 +11059,9 @@ class GraphVisualization {
         this.containerZoomEvent(onZoomEvent, onDisplayZoomWheelInfoMessage);
         // 设置
         this.resize(this.isFullscreen, this.wheelZoomRequiresModKey);
-        this.initLayoutController();
         // 初始化所有节点 边
         this.init();
+        this.initLayoutController();
     }
     // 初始化配置
     initConfig(isFullscreen, layout, wheelZoomRequiresModKey) {
@@ -10751,6 +11154,30 @@ class GraphVisualization {
             case 'force':
                 this.forceSimulation = new ForceSimulation(this.render.bind(this));
                 break;
+            case 'cricular':
+                const size = this.measureSize();
+                this.circularlayout = new CircularLayout({
+                    type: 'circular',
+                    center: [0, 0],
+                    width: size.width,
+                    height: size.height,
+                    startRadius: null,
+                    endRadius: null,
+                    clockwise: true,
+                    ordering: 'degree',
+                    // nodeSpacing: 200,
+                    // nodeSize: 25,
+                    startAngle: 0,
+                    endAngle: 2 * Math.PI,
+                    nodes: this.graph.nodes(),
+                    edges: this.graph.relationships(),
+                });
+                this.circularlayout.execute();
+                this.render();
+                setTimeout(() => {
+                  this.zoomToFitViewport();
+                }, 100)
+                break;
         }
     }
     // 初始化节点 边以及缩放比例
@@ -10790,7 +11217,7 @@ class GraphVisualization {
             .join('g')
             .attr('class', 'node')
             .attr('aria-label', (d) => `graph-node${d.id}`)
-            .call(nodeEventHandlers, this.trigger)
+            .call(nodeEventHandlers, this.trigger, this.forceSimulation)
             // 如果被选中 那么添加对应的选择样式
             .classed('selected', (node) => node.selected);
         node.forEach((renderer) => nodeGroups.call(renderer.onGraphChange, this));
@@ -10902,6 +11329,7 @@ class GraphVisualization {
         const scale = -0.02364554 + 1.913 / (1 + (count / 12.7211) ** 0.8156444);
         this.zoomBehavior.scaleBy(this.root, Math.max(0, scale));
     }
+
     precomputeAndStart() {
         this.forceSimulation.precomputeAndStart(() => this.initialZoomToFit && this.zoomByType(ZoomType.FIT));
     }
