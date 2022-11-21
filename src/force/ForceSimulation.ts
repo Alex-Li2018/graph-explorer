@@ -24,7 +24,7 @@ import {
 import { GraphModel } from '../models/Graph';
 import { NodeModel } from '../models/Node';
 import { RelationshipModel } from '../models/Relationship';
-import circularLayout from './circularLayout';
+import circular from './circular';
 
 const oneRelationshipPerPairOfNodes = (graph: GraphModel) =>
   Array.from(graph.groupedRelationships()).map((pair) => pair.relationships[0]);
@@ -55,7 +55,7 @@ export class ForceSimulation {
       x: 0,
       y: 0,
     };
-    circularLayout(nodes, center, radius);
+    circular(nodes, center, radius);
 
     this.simulation
       .nodes(nodes)

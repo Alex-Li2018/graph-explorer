@@ -31,6 +31,8 @@ export class NodeModel {
   fy: number | null = null;
   hoverFixed: boolean;
   initialPositionCalculated: boolean;
+  // 节点的度
+  degree: number;
 
   constructor(
     id: string,
@@ -57,6 +59,7 @@ export class NodeModel {
     this.y = 0;
     this.hoverFixed = false;
     this.initialPositionCalculated = false;
+    this.degree = 0;
   }
 
   toJSON(): NodeProperties {

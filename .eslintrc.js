@@ -24,5 +24,6 @@ module.exports = {
         varsIgnorePattern: '^_', //通过lint正则
       },
     ],
+    '@typescript-eslint/no-this-alias': 'off',
   },
 };

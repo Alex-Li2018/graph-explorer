@@ -85,3 +85,35 @@ export type GetNodeNeighboursFn = (
   currentNeighbourIds: string[],
   callback: (data: BasicNodesAndRels) => void,
 ) => void;
+
+export type LayoutType = 'force' | 'cricle' | 'cascade';
+
+export type PointTuple = [number, number];
+
+export type IndexMap = {
+  [key: string]: number;
+};
+
+export type Degree = {
+  in: number;
+  out: number;
+  all: number;
+};
+
+export interface CircularLayoutOptions {
+  type: 'circular';
+  center?: PointTuple;
+  width?: number;
+  height?: number;
+  radius?: number | null;
+  startRadius?: number | null;
+  endRadius?: number | null;
+  clockwise?: boolean;
+  divisions?: number;
+  ordering?: 'topology' | 'topology-directed' | 'degree' | null;
+  angleRatio?: number;
+  workerEnabled?: boolean;
+  startAngle?: number;
+  endAngle?: number;
+  onLayoutEnd?: () => void;
+}

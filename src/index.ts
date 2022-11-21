@@ -211,10 +211,6 @@ export default class GraphVisualization {
       nodeGroups.call(renderer.onGraphChange, this),
     );
 
-    // nodeMenuRenderer.forEach((renderer) =>
-    //   nodeGroups.call(renderer.onGraphChange, this),
-    // );
-
     this.forceSimulation.updateNodes(this.graph);
     this.forceSimulation.updateRelationships(this.graph);
   }
