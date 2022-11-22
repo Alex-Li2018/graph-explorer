@@ -98,4 +98,8 @@ export class ForceSimulation {
   restart(): void {
     this.simulation.alpha(DEFAULT_ALPHA).restart();
   }
+
+  stop(): void {
+    this.simulation.stop();
+  }
 }

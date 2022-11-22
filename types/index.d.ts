@@ -305,6 +305,7 @@ declare class ForceSimulation {
     updateRelationships(graph: GraphModel): void;
     precomputeAndStart(onEnd?: () => void): void;
     restart(): void;
+    stop(): void;
 }
 
 declare type GraphStatsLabels = Record<string, {
@@ -445,8 +446,8 @@ declare class GraphVisualization {
     private initStyle;
     private innitContainer;
     private containerZoomEvent;
+    initNodeAndRelationship(): void;
     private initLayoutController;
-    init(): void;
     update(options: {
         updateNodes: boolean;
         updateRelationships: boolean;
@@ -459,13 +460,15 @@ declare class GraphVisualization {
     private zoomToFitViewport;
     private getZoomScaleFactorToFitWholeGraph;
     private adjustZoomMinScaleExtentToFitGraph;
-    on: (event: string, callback: (...args: any[]) => void) => this;
-    trigger: (event: string, ...args: any[]) => void;
     setInitialZoom(): void;
     precomputeAndStart(): void;
-    boundingBox(): DOMRect | undefined;
     resize(isFullscreen: boolean, wheelZoomRequiresModKey: boolean | undefined): void;
+    boundingBox(): DOMRect | undefined;
     initEventHandler(getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem) => void, onItemSelect: (item: VizItem) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction: (event: GraphInteraction) => void): GraphEventHandlerModel;
+    on: (event: string, callback: (...args: any[]) => void) => this;
+    trigger: (event: string, ...args: any[]) => void;
+    cricularLayoutHandler(): void;
+    forceSimulationHandler(): void;
 }
 
 export { GraphVisualization as default };

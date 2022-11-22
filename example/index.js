@@ -10161,6 +10161,9 @@ class ForceSimulation {
     restart() {
         this.simulation.alpha(DEFAULT_ALPHA).restart();
     }
+    stop() {
+        this.simulation.stop();
+    }
 }
 
 const nodeEventHandlers = (selection, trigger, simulation) => {
@@ -11052,15 +11055,21 @@ class GraphVisualization {
         this.wheelZoomRequiresModKey = wheelZoomRequiresModKey;
         this.initialZoomToFit = initialZoomToFit;
         this.root = d3Select(element);
+        // 初始化配置
         this.initConfig(isFullscreen, layout, wheelZoomRequiresModKey);
+        // 初始化图谱数据
         this.initGraphData(graphData);
+        // 初始化样式
         this.initStyle();
+        // 初始化容器
         this.innitContainer(measureSize);
-        this.containerZoomEvent(onZoomEvent, onDisplayZoomWheelInfoMessage);
-        // 设置
+        // 设置svg的viebox 当画布尺寸变化时 可以调用此函数
         this.resize(this.isFullscreen, this.wheelZoomRequiresModKey);
+        // 容器缩放事件
+        this.containerZoomEvent(onZoomEvent, onDisplayZoomWheelInfoMessage);
         // 初始化所有节点 边
-        this.init();
+        this.initNodeAndRelationship();
+        // 初始化布局控制逻辑
         this.initLayoutController();
     }
     // 初始化配置
@@ -11104,6 +11113,12 @@ class GraphVisualization {
         });
         // node relation container
         this.container = this.baseGroup.append('g');
+        this.container.classed('container-layer');
+        this.container
+            .selectAll('g.layer')
+            .data(['relationships', 'nodes'])
+            .join('g')
+            .attr('class', (d) => `layer ${d}`);
     }
     // 容器缩放事件
     containerZoomEvent(onZoomEvent, onDisplayZoomWheelInfoMessage) {
@@ -11148,49 +11163,21 @@ class GraphVisualization {
             .on('click.zoom', () => (this.draw = false))
             .on('dblclick.zoom', null);
     }
+    // 初始化节点 边以及缩放比例
+    initNodeAndRelationship() {
+        this.updateNodes();
+        this.updateRelationships();
+    }
     // 初始化布局
     initLayoutController() {
         switch (this.layout) {
             case 'force':
-                this.forceSimulation = new ForceSimulation(this.render.bind(this));
+                this.forceSimulationHandler();
                 break;
             case 'cricular':
-                const size = this.measureSize();
-                this.circularlayout = new CircularLayout({
-                    type: 'circular',
-                    center: [0, 0],
-                    width: size.width,
-                    height: size.height,
-                    startRadius: null,
-                    endRadius: null,
-                    clockwise: true,
-                    ordering: 'degree',
-                    // nodeSpacing: 200,
-                    // nodeSize: 25,
-                    startAngle: 0,
-                    endAngle: 2 * Math.PI,
-                    nodes: this.graph.nodes(),
-                    edges: this.graph.relationships(),
-                });
-                this.circularlayout.execute();
-                this.render();
-                setTimeout(() => {
-                  this.zoomToFitViewport();
-                }, 100)
+                this.cricularLayoutHandler();
                 break;
         }
-    }
-    // 初始化节点 边以及缩放比例
-    init() {
-        this.container
-            .selectAll('g.layer')
-            .data(['relationships', 'nodes'])
-            .join('g')
-            .attr('class', (d) => `layer ${d}`);
-        this.updateNodes();
-        this.updateRelationships();
-        this.adjustZoomMinScaleExtentToFitGraph();
-        this.setInitialZoom();
     }
     update(options) {
         if (options.updateNodes) {
@@ -11278,6 +11265,7 @@ class GraphVisualization {
                 .translate(centerPointOffset.x, centerPointOffset.y));
         }
     };
+    // 获取适配整个图谱的缩放大小 以及平移大小
     getZoomScaleFactorToFitWholeGraph = () => {
         const graphSize = 
         // this.container.node()返回当前选择集的第一个元素
@@ -11311,30 +11299,14 @@ class GraphVisualization {
             ]);
         }
     };
-    on = (event, callback) => {
-        if (isNullish(this.callbacks[event])) {
-            this.callbacks[event] = [];
-        }
-        this.callbacks[event]?.push(callback);
-        return this;
-    };
-    trigger = (event, ...args) => {
-        const callbacksForEvent = this.callbacks[event] ?? [];
-        // eslint-disable-next-line prefer-spread
-        callbacksForEvent.forEach((callback) => callback.apply(null, args));
-    };
     setInitialZoom() {
         const count = this.graph.nodes().length;
         // chosen by *feel* (graph fitting guesstimate)
         const scale = -0.02364554 + 1.913 / (1 + (count / 12.7211) ** 0.8156444);
         this.zoomBehavior.scaleBy(this.root, Math.max(0, scale));
     }
-
     precomputeAndStart() {
         this.forceSimulation.precomputeAndStart(() => this.initialZoomToFit && this.zoomByType(ZoomType.FIT));
-    }
-    boundingBox() {
-        return this.container.node()?.getBBox();
     }
     resize(isFullscreen, wheelZoomRequiresModKey) {
         const size = this.measureSize();
@@ -11351,11 +11323,58 @@ class GraphVisualization {
             size.height,
         ].join(' '));
     }
+    boundingBox() {
+        return this.container.node()?.getBBox();
+    }
     // init graph bind event
     initEventHandler(getNodeNeighbours, onItemMouseOver, onItemSelect, onGraphModelChange, onGraphInteraction) {
         const graphEventHandler = new GraphEventHandlerModel(this.graph, this, getNodeNeighbours, onItemMouseOver, onItemSelect, onGraphModelChange, onGraphInteraction);
         graphEventHandler.bindEventHandlers();
         return graphEventHandler;
+    }
+    on = (event, callback) => {
+        if (isNullish(this.callbacks[event])) {
+            this.callbacks[event] = [];
+        }
+        this.callbacks[event]?.push(callback);
+        return this;
+    };
+    trigger = (event, ...args) => {
+        const callbacksForEvent = this.callbacks[event] ?? [];
+        // eslint-disable-next-line prefer-spread
+        callbacksForEvent.forEach((callback) => callback.apply(null, args));
+    };
+    // 环形布局
+    cricularLayoutHandler() {
+        // 关闭力模型布局
+        this.forceSimulation && this.forceSimulation.stop();
+        const size = this.measureSize();
+        const padding_margin = 100;
+        this.circularlayout = new CircularLayout({
+            type: 'circular',
+            center: [0, 0],
+            width: size.width - padding_margin,
+            height: size.height - padding_margin,
+            startRadius: null,
+            endRadius: null,
+            clockwise: true,
+            ordering: 'degree',
+            // nodeSpacing: 20,
+            // nodeSize: 25,
+            startAngle: 0,
+            endAngle: 2 * Math.PI,
+            nodes: this.graph.nodes(),
+            edges: this.graph.relationships(),
+        });
+        this.circularlayout.execute();
+        this.render();
+    }
+    // 力模型布局
+    forceSimulationHandler() {
+        this.adjustZoomMinScaleExtentToFitGraph();
+        this.setInitialZoom();
+        this.forceSimulation = new ForceSimulation(this.render.bind(this));
+        this.precomputeAndStart();
     }
 }
 
