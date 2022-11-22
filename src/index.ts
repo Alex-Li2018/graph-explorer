@@ -41,6 +41,7 @@ import {
 } from './GraphEventHandlerModel';
 import { GraphStats } from './utils/mapper';
 import { CircularLayout } from './layout/CircularLayout';
+import { GridLayout } from './layout/GridLayout';
 
 type MeasureSizeFn = () => { width: number; height: number };
 type ZoomEvent = (limitsReached: ZoomLimitsReached) => void;
@@ -66,6 +67,8 @@ export default class GraphVisualization {
   forceSimulation: ForceSimulation;
   // 环形布局
   circularlayout: CircularLayout;
+  // 网格布局
+  gridLayout: GridLayout;
 
   // This flags that a panning is ongoing and won't trigger
   // 'canvasClick' event when panning(平移) ends.
@@ -231,7 +234,8 @@ export default class GraphVisualization {
       case 'cricular':
         this.cricularLayoutHandler();
         break;
-      case 'cascade':
+      case 'grid':
+        this.gridLayoutHandler();
         break;
       default:
         break;
@@ -486,7 +490,7 @@ export default class GraphVisualization {
   };
 
   // 环形布局
-  cricularLayoutHandler() {
+  public cricularLayoutHandler() {
     // 关闭力模型布局
     this.forceSimulation && this.forceSimulation.stop();
 
@@ -515,10 +519,31 @@ export default class GraphVisualization {
   }
 
   // 力模型布局
-  forceSimulationHandler() {
+  public forceSimulationHandler() {
     this.adjustZoomMinScaleExtentToFitGraph();
     this.setInitialZoom();
     this.forceSimulation = new ForceSimulation(this.render.bind(this));
     this.precomputeAndStart();
+  }
+
+  // 网格布局
+  public gridLayoutHandler() {
+    // 关闭力模型布局
+    this.forceSimulation && this.forceSimulation.stop();
+
+    const size = this.measureSize();
+    const padding_margin = 100;
+
+    this.gridLayout = new GridLayout({
+      type: 'grid',
+      width: size.width - padding_margin,
+      height: size.height - padding_margin,
+      begin: [0, 0],
+      nodes: this.graph.nodes(),
+      edges: this.graph.relationships(),
+    });
+
+    this.gridLayout.execute();
+    this.render();
   }
 }

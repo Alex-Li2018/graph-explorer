@@ -86,7 +86,7 @@ export type GetNodeNeighboursFn = (
   callback: (data: BasicNodesAndRels) => void,
 ) => void;
 
-export type LayoutType = 'force' | 'cricular' | 'cascade';
+export type LayoutType = 'force' | 'cricular' | 'grid';
 
 export type PointTuple = [number, number];
 
@@ -119,5 +119,24 @@ export interface CircularLayoutOptions {
   edges: RelationshipModel[];
   nodeSpacing?: ((d?: unknown) => number) | number | undefined;
   nodeSize?: number | undefined;
+  onLayoutEnd?: () => void;
+}
+
+export interface GridLayoutOptions {
+  type: 'grid';
+  nodes: NodeModel[];
+  edges: RelationshipModel[];
+  width?: number;
+  height?: number;
+  begin?: PointTuple;
+  preventOverlap?: boolean;
+  nodeSize?: number | number[];
+  preventOverlapPadding?: number;
+  condense?: boolean;
+  rows?: number;
+  cols?: number;
+  sortBy?: string;
+  workerEnabled?: boolean;
+  position?: ((node: NodeModel) => { row?: number; col?: number }) | undefined;
   onLayoutEnd?: () => void;
 }

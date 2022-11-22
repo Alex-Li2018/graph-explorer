@@ -1,7 +1,6 @@
 import { NodeModel } from '../models/Node';
 import { RelationshipModel } from '../models/Relationship';
-import { isObject } from '../utils/object';
-import { isFunction, isNumber, getDegree } from '../utils/utils';
+import { getDegree, getFuncByUnknownType } from '../utils/utils';
 import { PointTuple, CircularLayoutOptions, IndexMap, Degree } from '../types';
 
 // function initHierarchy(
@@ -77,55 +76,6 @@ function compareDegree(a: NodeModel, b: NodeModel) {
   }
   return 0;
 }
-
-export const getFuncByUnknownType = (
-  defaultValue: number,
-  value?:
-    | number
-    | number[]
-    | { width: number; height: number }
-    | ((d?: any) => number)
-    | undefined,
-  resultIsNumber = true,
-): ((d?: any) => number | number[]) => {
-  if (!value && value !== 0) {
-    return (d) => {
-      if (d.size) {
-        if (Array.isArray(d.size))
-          return d.size[0] > d.size[1] ? d.size[0] : d.size[1];
-        if (isObject(d.size))
-          return d.size.width > d.size.height ? d.size.width : d.size.height;
-        return d.size;
-      }
-      return defaultValue;
-    };
-  }
-  if (isFunction(value)) {
-    return value;
-  }
-  if (isNumber(value)) {
-    return () => value;
-  }
-  if (Array.isArray(value)) {
-    return () => {
-      if (resultIsNumber) {
-        const max = Math.max(...(value as number[]));
-        return isNaN(max) ? defaultValue : max;
-      }
-      return value;
-    };
-  }
-  if (isObject(value)) {
-    return () => {
-      if (resultIsNumber) {
-        const max = Math.max(value.width, value.height);
-        return isNaN(max) ? defaultValue : max;
-      }
-      return [value.width, value.height];
-    };
-  }
-  return () => defaultValue;
-};
 
 export class CircularLayout {
   /** 布局中心 */
