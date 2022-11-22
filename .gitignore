@@ -8,7 +8,6 @@ coverage/
 /build
 /bundle-report.html
 /target
-dist/
 NOTICE.xml
 *.tgz
 *.tar.gz
