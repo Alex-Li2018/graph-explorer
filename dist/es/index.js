@@ -3875,12 +3875,30 @@ function uniq(list) {
     return [...new Set(list)];
 }
 class GraphModel {
-    _nodes;
-    _relationships;
-    expandedNodeMap;
-    nodeMap;
-    relationshipMap;
     constructor() {
+        this.addExpandedNodes = (node, nodes) => {
+            for (const eNode of Array.from(nodes)) {
+                if (this.findNode(eNode.id) == null) {
+                    this.nodeMap[eNode.id] = eNode;
+                    this._nodes.push(eNode);
+                    this.expandedNodeMap[node.id] = this.expandedNodeMap[node.id]
+                        ? uniq(this.expandedNodeMap[node.id].concat([eNode.id]))
+                        : [eNode.id];
+                }
+            }
+        };
+        this.collapseNode = (node) => {
+            if (!this.expandedNodeMap[node.id]) {
+                return;
+            }
+            this.expandedNodeMap[node.id].forEach((id) => {
+                const eNode = this.nodeMap[id];
+                this.collapseNode(eNode);
+                this.removeConnectedRelationships(eNode);
+                this.removeNode(eNode);
+            });
+            this.expandedNodeMap[node.id] = [];
+        };
         this.addNodes = this.addNodes.bind(this);
         this.removeNode = this.removeNode.bind(this);
         this.updateNode = this.updateNode.bind(this);
@@ -3927,35 +3945,12 @@ class GraphModel {
             }
         }
     }
-    addExpandedNodes = (node, nodes) => {
-        for (const eNode of Array.from(nodes)) {
-            if (this.findNode(eNode.id) == null) {
-                this.nodeMap[eNode.id] = eNode;
-                this._nodes.push(eNode);
-                this.expandedNodeMap[node.id] = this.expandedNodeMap[node.id]
-                    ? uniq(this.expandedNodeMap[node.id].concat([eNode.id]))
-                    : [eNode.id];
-            }
-        }
-    };
     removeNode(node) {
         if (this.findNode(node.id) != null) {
             delete this.nodeMap[node.id];
             this._nodes.splice(this._nodes.indexOf(node), 1);
         }
     }
-    collapseNode = (node) => {
-        if (!this.expandedNodeMap[node.id]) {
-            return;
-        }
-        this.expandedNodeMap[node.id].forEach((id) => {
-            const eNode = this.nodeMap[id];
-            this.collapseNode(eNode);
-            this.removeConnectedRelationships(eNode);
-            this.removeNode(eNode);
-        });
-        this.expandedNodeMap[node.id] = [];
-    };
     updateNode(node) {
         if (this.findNode(node.id) != null) {
             this.removeNode(node);
@@ -4028,9 +4023,6 @@ class GraphModel {
     }
 }
 class NodePair {
-    nodeA;
-    nodeB;
-    relationships;
     constructor(node1, node2) {
         this.relationships = [];
         if (node1.id < node2.id) {
@@ -4051,28 +4043,11 @@ class NodePair {
 }
 
 class NodeModel {
-    id;
-    labels;
-    propertyList;
-    propertyMap;
-    isNode = true;
-    isRelationship = false;
-    // Visualisation properties
-    radius;
-    caption;
-    selected;
-    expanded;
-    minified;
-    contextMenu;
-    x;
-    y;
-    fx = null;
-    fy = null;
-    hoverFixed;
-    initialPositionCalculated;
-    // 节点的度
-    degree;
     constructor(id, labels, properties, propertyTypes) {
+        this.isNode = true;
+        this.isRelationship = false;
+        this.fx = null;
+        this.fy = null;
         this.id = id;
         this.labels = labels;
         this.propertyMap = properties;
@@ -4109,26 +4084,9 @@ class NodeModel {
 }
 
 class RelationshipModel {
-    id;
-    propertyList;
-    propertyMap;
-    source;
-    target;
-    type;
-    isNode = false;
-    isRelationship = true;
-    naturalAngle;
-    caption;
-    captionLength;
-    captionHeight;
-    captionLayout;
-    shortCaption;
-    shortCaptionLength;
-    selected;
-    centreDistance;
-    internal;
-    arrow;
     constructor(id, source, target, type, properties, propertyTypes) {
+        this.isNode = false;
+        this.isRelationship = true;
         this.id = id;
         this.source = source;
         this.target = target;
@@ -4164,7 +4122,7 @@ function isNullish(x) {
     return x === null || x === undefined;
 }
 function optionalToString(value) {
-    return !isNullish(value) && typeof value?.toString === 'function'
+    return !isNullish(value) && typeof (value === null || value === void 0 ? void 0 : value.toString) === 'function'
         ? value.toString()
         : value;
 }
@@ -4258,7 +4216,7 @@ const getDegree = (n, nodeIdxMap, edges) => {
 // 获取边开始节点 结束节点的ID
 const getEdgeTerminal = (RelationshipModel, type) => {
     const terminal = RelationshipModel[type];
-    return terminal?.id;
+    return terminal === null || terminal === void 0 ? void 0 : terminal.id;
 };
 
 // map graph data
@@ -4298,11 +4256,6 @@ const intersectWithOtherCircle = function (fixedPoint, radius, xCenter, polarity
     return intersection;
 };
 class ArcArrow {
-    deflection;
-    midShaftPoint;
-    outline;
-    overlay;
-    shaftLength;
     constructor(startRadius, endRadius, endCentre, deflection, arrowWidth, headWidth, headLength, captionLayout) {
         this.deflection = deflection;
         const deflectionRadians = (this.deflection * Math.PI) / 180;
@@ -4512,8 +4465,6 @@ class ArcArrow {
 }
 
 class Point {
-    x;
-    y;
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -4523,10 +4474,6 @@ class Point {
     }
 }
 class LoopArrow {
-    midShaftPoint;
-    outline;
-    overlay;
-    shaftLength;
     constructor(nodeRadius, straightLength, spreadDegrees, shaftWidth, headWidth, headLength, captionHeight) {
         const spread = (spreadDegrees * Math.PI) / 180;
         const r1 = nodeRadius;
@@ -4620,13 +4567,8 @@ class LoopArrow {
 }
 
 class StraightArrow {
-    length;
-    midShaftPoint;
-    outline;
-    overlay;
-    shaftLength;
-    deflection = 0;
     constructor(startRadius, endRadius, centreDistance, shaftWidth, headWidth, headHeight, captionLayout) {
+        this.deflection = 0;
         this.length = centreDistance - (startRadius + endRadius);
         this.shaftLength = this.length - headHeight;
         const startArrow = startRadius;
@@ -4757,8 +4699,6 @@ function measureText(text, fontFamily, fontSize, canvas2DContext) {
 }
 
 class PairwiseArcsRelationshipRouting {
-    style;
-    canvas;
     constructor(style) {
         this.style = style;
         this.canvas = document.createElement('canvas');
@@ -4911,9 +4851,6 @@ class PairwiseArcsRelationshipRouting {
 }
 
 class GraphGeometryModel {
-    relationshipRouting;
-    style;
-    canvas;
     constructor(style) {
         this.style = style;
         this.relationshipRouting = new PairwiseArcsRelationshipRouting(this.style);
@@ -8656,10 +8593,10 @@ function darkIsContrast(c) {
     return yiq >= 141;
 }
 function calcWordColor(word, config) {
-    const lightMax = config?.lightMax || 95;
-    const lightMin = config?.lightMin || 70;
-    const chromaMax = config?.chromaMax || 20;
-    const chromaMin = config?.chromaMin || 5;
+    const lightMax = (config === null || config === void 0 ? void 0 : config.lightMax) || 95;
+    const lightMin = (config === null || config === void 0 ? void 0 : config.lightMin) || 70;
+    const chromaMax = (config === null || config === void 0 ? void 0 : config.chromaMax) || 20;
+    const chromaMin = (config === null || config === void 0 ? void 0 : config.chromaMin) || 5;
     const first = positiveHash(getHash(word).toString());
     const second = positiveHash(first.toString());
     const third = positiveHash(second.toString());
@@ -8686,66 +8623,62 @@ function calculateDefaultNodeColors(nodeLabel, config = defaultOptions) {
 }
 
 class Selector {
-    tag = '';
-    classes = [];
     constructor(tag, classes) {
+        this.tag = '';
+        this.classes = [];
+        this.toString = () => {
+            return selectorArrayToString([this.tag].concat(this.classes));
+        };
         this.tag = tag;
-        this.classes = classes ?? [];
+        this.classes = classes !== null && classes !== void 0 ? classes : [];
     }
-    toString = () => {
-        return selectorArrayToString([this.tag].concat(this.classes));
-    };
 }
 class StyleElement {
-    selector;
-    props;
     constructor(selector) {
+        /**
+         * 从当前样式规则里找到对应的选择集样式
+         * @param rules
+         * @returns
+         */
+        this.applyRules = (rules) => {
+            for (let i = 0; i < rules.length; i++) {
+                const rule = rules[i];
+                if (rule.matches(this.selector)) {
+                    this.props = Object.assign(Object.assign({}, this.props), rule.props);
+                    this.props.caption = this.props.caption || this.props.defaultCaption;
+                }
+            }
+            return this;
+        };
+        this.get = (attr) => {
+            return this.props[attr] || '';
+        };
         this.selector = selector;
         this.props = {};
     }
-    /**
-     * 从当前样式规则里找到对应的选择集样式
-     * @param rules
-     * @returns
-     */
-    applyRules = (rules) => {
-        for (let i = 0; i < rules.length; i++) {
-            const rule = rules[i];
-            if (rule.matches(this.selector)) {
-                this.props = { ...this.props, ...rule.props };
-                this.props.caption = this.props.caption || this.props.defaultCaption;
-            }
-        }
-        return this;
-    };
-    get = (attr) => {
-        return this.props[attr] || '';
-    };
 }
 class StyleRule {
-    selector;
-    props;
     constructor(selector1, props1) {
+        this.matches = (selector) => {
+            if (this.selector.tag !== selector.tag) {
+                return false;
+            }
+            for (let i = 0; i < this.selector.classes.length; i++) {
+                const selectorClass = this.selector.classes[i];
+                if (selectorClass != null &&
+                    selector.classes.indexOf(selectorClass) === -1) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        this.matchesExact = (selector) => {
+            return (this.matches(selector) &&
+                this.selector.classes.length === selector.classes.length);
+        };
         this.selector = selector1;
         this.props = props1;
     }
-    matches = (selector) => {
-        if (this.selector.tag !== selector.tag) {
-            return false;
-        }
-        for (let i = 0; i < this.selector.classes.length; i++) {
-            const selectorClass = this.selector.classes[i];
-            if (selectorClass != null &&
-                selector.classes.indexOf(selectorClass) === -1) {
-                return false;
-            }
-        }
-        return true;
-    };
-    matchesExact = (selector) => {
-        return (this.matches(selector) &&
-            this.selector.classes.length === selector.classes.length);
-    };
 }
 // 默认样式
 const DEFAULT_STYLE = {
@@ -8873,10 +8806,270 @@ const DEFAULT_COLORS = [
     },
 ];
 class GraphStyleModel {
-    useGeneratedDefaultColors;
-    rules;
     constructor(useGeneratedDefaultColors = false) {
         this.useGeneratedDefaultColors = useGeneratedDefaultColors;
+        this.parseSelector = function (key) {
+            const tokens = selectorStringToArray(key);
+            return new Selector(tokens[0], tokens.slice(1));
+        };
+        this.nodeSelector = function (node = { labels: null }) {
+            const classes = node.labels != null ? node.labels : [];
+            return new Selector('node', classes);
+        };
+        this.relationshipSelector = function (rel = { type: null }) {
+            const classes = rel.type != null ? [rel.type] : [];
+            return new Selector('relationship', classes);
+        };
+        this.findRule = function (selector, rules) {
+            for (let i = 0; i < rules.length; i++) {
+                const rule = rules[i];
+                if (rule.matchesExact(selector)) {
+                    return rule;
+                }
+            }
+            return undefined;
+        };
+        this.findAvailableDefaultColor = function (rules) {
+            const usedColors = rules
+                .filter((rule) => {
+                return rule.props.color != null;
+            })
+                .map((rule) => {
+                return rule.props.color;
+            });
+            const index = 
+            // @ts-expect-error ts-migrate(2365) FIXME: Operator '>' cannot be applied to types 'number' a... Remove this comment to see the full error message
+            usedColors.length - 1 > DEFAULT_COLORS ? 0 : usedColors.length - 1;
+            return DEFAULT_COLORS[index];
+        };
+        this.getDefaultNodeCaption = function (item) {
+            if (!item ||
+                // @ts-expect-error ts-migrate(2365) FIXME: Operator '>' cannot be applied to types 'boolean' ... Remove this comment to see the full error message
+                !(item.propertyList != null ? item.propertyList.length : 0) > 0) {
+                return {
+                    defaultCaption: '<id>',
+                };
+            }
+            const captionPrioOrder = [
+                /^name$/i,
+                /^title$/i,
+                /^label$/i,
+                /name$/i,
+                /description$/i,
+                /^.+/,
+            ];
+            let defaultCaption = captionPrioOrder.reduceRight((leading, current) => {
+                const hits = item.propertyList.filter((prop) => current.test(prop.key));
+                if (hits.length) {
+                    return `{${hits[0].key}}`;
+                }
+                else {
+                    return leading;
+                }
+            }, '');
+            defaultCaption || (defaultCaption = '<id>');
+            return {
+                caption: defaultCaption,
+            };
+        };
+        this.calculateStyle = (selector) => {
+            return new StyleElement(selector).applyRules(this.rules);
+        };
+        this.setDefaultNodeStyle = (selector, item) => {
+            let defaultColor = true;
+            let defaultCaption = true;
+            for (let i = 0; i < this.rules.length; i++) {
+                const rule = this.rules[i];
+                if (rule.selector.classes.length > 0 && rule.matches(selector)) {
+                    if (rule.props.hasOwnProperty('color')) {
+                        defaultColor = false;
+                    }
+                    if (rule.props.hasOwnProperty('caption')) {
+                        defaultCaption = false;
+                    }
+                }
+            }
+            const minimalSelector = new Selector(selector.tag, selector.classes.sort().slice(0, 1));
+            if (defaultColor) {
+                const calcColor = (label) => {
+                    const { backgroundColor, borderColor, textColor } = calculateDefaultNodeColors(label.classes[0]);
+                    return {
+                        'border-color': borderColor,
+                        'text-color-internal': textColor,
+                        color: backgroundColor,
+                    };
+                };
+                this.changeForSelector(minimalSelector, this.useGeneratedDefaultColors
+                    ? calcColor(minimalSelector)
+                    : this.findAvailableDefaultColor(this.rules));
+            }
+            if (defaultCaption) {
+                this.changeForSelector(minimalSelector, this.getDefaultNodeCaption(item));
+            }
+        };
+        this.changeForSelector = (selector, props) => {
+            let rule = this.findRule(selector, this.rules);
+            if (rule == null) {
+                rule = new StyleRule(selector, props);
+                this.rules.push(rule);
+            }
+            rule.props = Object.assign(Object.assign({}, rule.props), props);
+            return rule;
+        };
+        this.destroyRule = (rule) => {
+            const idx = this.rules.indexOf(rule);
+            if (idx != null) {
+                this.rules.splice(idx, 1);
+            }
+        };
+        this.importGrass = (string) => {
+            try {
+                const rules = this.parse(string);
+                this.loadRules(rules);
+            }
+            catch (_error) {
+                // e = _error
+            }
+        };
+        this.parse = function (string) {
+            const chars = string.split('');
+            let insideString = false;
+            let insideProps = false;
+            let keyword = '';
+            let props = '';
+            const rules = {};
+            for (let i = 0; i < chars.length; i++) {
+                const c = chars[i];
+                let skipThis = true;
+                switch (c) {
+                    case '{':
+                        if (!insideString) {
+                            insideProps = true;
+                        }
+                        else {
+                            skipThis = false;
+                        }
+                        break;
+                    case '}':
+                        if (!insideString) {
+                            insideProps = false;
+                            rules[keyword] = props;
+                            keyword = '';
+                            props = '';
+                        }
+                        else {
+                            skipThis = false;
+                        }
+                        break;
+                    case "'":
+                        // @ts-expect-error ts-migrate(2447) FIXME: The '^=' operator is not allowed for boolean types... Remove this comment to see the full error message
+                        insideString ^= true;
+                        break;
+                    default:
+                        skipThis = false;
+                }
+                if (skipThis) {
+                    continue;
+                }
+                if (insideProps) {
+                    props += c;
+                }
+                else {
+                    if (!c.match(/[\s\n]/)) {
+                        keyword += c;
+                    }
+                }
+            }
+            for (const k in rules) {
+                const v = rules[k];
+                rules[k] = {};
+                v.split(';').forEach((prop) => {
+                    const [key, val] = prop.split(':');
+                    if (key && val) {
+                        rules[k][key.trim()] = val.trim();
+                    }
+                });
+            }
+            return rules;
+        };
+        this.resetToDefault = () => {
+            this.loadRules();
+        };
+        this.toSheet = () => {
+            const sheet = {};
+            this.rules.forEach((rule) => {
+                sheet[rule.selector.toString()] = rule.props;
+            });
+            return sheet;
+        };
+        this.toString = () => {
+            let str = '';
+            this.rules.forEach((r) => {
+                str += `${r.selector.toString()} {\n`;
+                for (const k in r.props) {
+                    let v = r.props[k];
+                    if (k === 'caption') {
+                        v = `'${v}'`;
+                    }
+                    str += `  ${k}: ${v};\n`;
+                }
+                str += '}\n\n';
+            });
+            return str;
+        };
+        this.loadRules = (data) => {
+            const localData = typeof data === 'object' ? data : DEFAULT_STYLE;
+            this.rules = [];
+            for (const key in localData) {
+                const props = localData[key];
+                this.rules.push(new StyleRule(this.parseSelector(key), props));
+            }
+        };
+        this.defaultSizes = function () {
+            return DEFAULT_SIZES;
+        };
+        this.defaultArrayWidths = function () {
+            return DEFAULT_ARRAY_WIDTHS;
+        };
+        this.defaultColors = function () {
+            return DEFAULT_COLORS;
+        };
+        this.interpolate = (str, item) => {
+            let ips = str.replace(/\{([^{}]*)\}/g, (_a, b) => {
+                const r = item.propertyMap[b];
+                if (typeof r === 'object') {
+                    return r.join(', ');
+                }
+                if (typeof r === 'string' || typeof r === 'number') {
+                    return r;
+                }
+                return '';
+            });
+            if (ips.length < 1 && str === '{type}' && item.isRelationship) {
+                ips = '<type>';
+            }
+            if (ips.length < 1 && str === '{id}' && item.isNode) {
+                ips = '<id>';
+            }
+            return ips.replace(/^<(id|type)>$/, (_a, b) => {
+                const r = item[b];
+                if (typeof r === 'string' || typeof r === 'number') {
+                    return r;
+                }
+                return '';
+            });
+        };
+        this.forNode = (node = {}) => {
+            const selector = this.nodeSelector(node);
+            if ((node.labels != null ? node.labels.length : 0) > 0) {
+                this.setDefaultNodeStyle(selector, node);
+            }
+            return this.calculateStyle(selector);
+        };
+        this.forRelationship = (rel) => {
+            const selector = this.relationshipSelector(rel);
+            return this.calculateStyle(selector);
+        };
         this.rules = [];
         try {
             this.loadRules();
@@ -8885,268 +9078,6 @@ class GraphStyleModel {
             // e = _error
         }
     }
-    parseSelector = function (key) {
-        const tokens = selectorStringToArray(key);
-        return new Selector(tokens[0], tokens.slice(1));
-    };
-    nodeSelector = function (node = { labels: null }) {
-        const classes = node.labels != null ? node.labels : [];
-        return new Selector('node', classes);
-    };
-    relationshipSelector = function (rel = { type: null }) {
-        const classes = rel.type != null ? [rel.type] : [];
-        return new Selector('relationship', classes);
-    };
-    findRule = function (selector, rules) {
-        for (let i = 0; i < rules.length; i++) {
-            const rule = rules[i];
-            if (rule.matchesExact(selector)) {
-                return rule;
-            }
-        }
-        return undefined;
-    };
-    findAvailableDefaultColor = function (rules) {
-        const usedColors = rules
-            .filter((rule) => {
-            return rule.props.color != null;
-        })
-            .map((rule) => {
-            return rule.props.color;
-        });
-        const index = 
-        // @ts-expect-error ts-migrate(2365) FIXME: Operator '>' cannot be applied to types 'number' a... Remove this comment to see the full error message
-        usedColors.length - 1 > DEFAULT_COLORS ? 0 : usedColors.length - 1;
-        return DEFAULT_COLORS[index];
-    };
-    getDefaultNodeCaption = function (item) {
-        if (!item ||
-            // @ts-expect-error ts-migrate(2365) FIXME: Operator '>' cannot be applied to types 'boolean' ... Remove this comment to see the full error message
-            !(item.propertyList != null ? item.propertyList.length : 0) > 0) {
-            return {
-                defaultCaption: '<id>',
-            };
-        }
-        const captionPrioOrder = [
-            /^name$/i,
-            /^title$/i,
-            /^label$/i,
-            /name$/i,
-            /description$/i,
-            /^.+/,
-        ];
-        let defaultCaption = captionPrioOrder.reduceRight((leading, current) => {
-            const hits = item.propertyList.filter((prop) => current.test(prop.key));
-            if (hits.length) {
-                return `{${hits[0].key}}`;
-            }
-            else {
-                return leading;
-            }
-        }, '');
-        defaultCaption || (defaultCaption = '<id>');
-        return {
-            caption: defaultCaption,
-        };
-    };
-    calculateStyle = (selector) => {
-        return new StyleElement(selector).applyRules(this.rules);
-    };
-    setDefaultNodeStyle = (selector, item) => {
-        let defaultColor = true;
-        let defaultCaption = true;
-        for (let i = 0; i < this.rules.length; i++) {
-            const rule = this.rules[i];
-            if (rule.selector.classes.length > 0 && rule.matches(selector)) {
-                if (rule.props.hasOwnProperty('color')) {
-                    defaultColor = false;
-                }
-                if (rule.props.hasOwnProperty('caption')) {
-                    defaultCaption = false;
-                }
-            }
-        }
-        const minimalSelector = new Selector(selector.tag, selector.classes.sort().slice(0, 1));
-        if (defaultColor) {
-            const calcColor = (label) => {
-                const { backgroundColor, borderColor, textColor } = calculateDefaultNodeColors(label.classes[0]);
-                return {
-                    'border-color': borderColor,
-                    'text-color-internal': textColor,
-                    color: backgroundColor,
-                };
-            };
-            this.changeForSelector(minimalSelector, this.useGeneratedDefaultColors
-                ? calcColor(minimalSelector)
-                : this.findAvailableDefaultColor(this.rules));
-        }
-        if (defaultCaption) {
-            this.changeForSelector(minimalSelector, this.getDefaultNodeCaption(item));
-        }
-    };
-    changeForSelector = (selector, props) => {
-        let rule = this.findRule(selector, this.rules);
-        if (rule == null) {
-            rule = new StyleRule(selector, props);
-            this.rules.push(rule);
-        }
-        rule.props = { ...rule.props, ...props };
-        return rule;
-    };
-    destroyRule = (rule) => {
-        const idx = this.rules.indexOf(rule);
-        if (idx != null) {
-            this.rules.splice(idx, 1);
-        }
-    };
-    importGrass = (string) => {
-        try {
-            const rules = this.parse(string);
-            this.loadRules(rules);
-        }
-        catch (_error) {
-            // e = _error
-        }
-    };
-    parse = function (string) {
-        const chars = string.split('');
-        let insideString = false;
-        let insideProps = false;
-        let keyword = '';
-        let props = '';
-        const rules = {};
-        for (let i = 0; i < chars.length; i++) {
-            const c = chars[i];
-            let skipThis = true;
-            switch (c) {
-                case '{':
-                    if (!insideString) {
-                        insideProps = true;
-                    }
-                    else {
-                        skipThis = false;
-                    }
-                    break;
-                case '}':
-                    if (!insideString) {
-                        insideProps = false;
-                        rules[keyword] = props;
-                        keyword = '';
-                        props = '';
-                    }
-                    else {
-                        skipThis = false;
-                    }
-                    break;
-                case "'":
-                    // @ts-expect-error ts-migrate(2447) FIXME: The '^=' operator is not allowed for boolean types... Remove this comment to see the full error message
-                    insideString ^= true;
-                    break;
-                default:
-                    skipThis = false;
-            }
-            if (skipThis) {
-                continue;
-            }
-            if (insideProps) {
-                props += c;
-            }
-            else {
-                if (!c.match(/[\s\n]/)) {
-                    keyword += c;
-                }
-            }
-        }
-        for (const k in rules) {
-            const v = rules[k];
-            rules[k] = {};
-            v.split(';').forEach((prop) => {
-                const [key, val] = prop.split(':');
-                if (key && val) {
-                    rules[k][key.trim()] = val.trim();
-                }
-            });
-        }
-        return rules;
-    };
-    resetToDefault = () => {
-        this.loadRules();
-    };
-    toSheet = () => {
-        const sheet = {};
-        this.rules.forEach((rule) => {
-            sheet[rule.selector.toString()] = rule.props;
-        });
-        return sheet;
-    };
-    toString = () => {
-        let str = '';
-        this.rules.forEach((r) => {
-            str += `${r.selector.toString()} {\n`;
-            for (const k in r.props) {
-                let v = r.props[k];
-                if (k === 'caption') {
-                    v = `'${v}'`;
-                }
-                str += `  ${k}: ${v};\n`;
-            }
-            str += '}\n\n';
-        });
-        return str;
-    };
-    loadRules = (data) => {
-        const localData = typeof data === 'object' ? data : DEFAULT_STYLE;
-        this.rules = [];
-        for (const key in localData) {
-            const props = localData[key];
-            this.rules.push(new StyleRule(this.parseSelector(key), props));
-        }
-    };
-    defaultSizes = function () {
-        return DEFAULT_SIZES;
-    };
-    defaultArrayWidths = function () {
-        return DEFAULT_ARRAY_WIDTHS;
-    };
-    defaultColors = function () {
-        return DEFAULT_COLORS;
-    };
-    interpolate = (str, item) => {
-        let ips = str.replace(/\{([^{}]*)\}/g, (_a, b) => {
-            const r = item.propertyMap[b];
-            if (typeof r === 'object') {
-                return r.join(', ');
-            }
-            if (typeof r === 'string' || typeof r === 'number') {
-                return r;
-            }
-            return '';
-        });
-        if (ips.length < 1 && str === '{type}' && item.isRelationship) {
-            ips = '<type>';
-        }
-        if (ips.length < 1 && str === '{id}' && item.isNode) {
-            ips = '<id>';
-        }
-        return ips.replace(/^<(id|type)>$/, (_a, b) => {
-            const r = item[b];
-            if (typeof r === 'string' || typeof r === 'number') {
-                return r;
-            }
-            return '';
-        });
-    };
-    forNode = (node = {}) => {
-        const selector = this.nodeSelector(node);
-        if ((node.labels != null ? node.labels.length : 0) > 0) {
-            this.setDefaultNodeStyle(selector, node);
-        }
-        return this.calculateStyle(selector);
-    };
-    forRelationship = (rel) => {
-        const selector = this.relationshipSelector(rel);
-        return this.calculateStyle(selector);
-    };
 }
 
 function tree_add(d) {
@@ -10146,9 +10077,8 @@ function circular(nodes, center, radius) {
 
 const oneRelationshipPerPairOfNodes = (graph) => Array.from(graph.groupedRelationships()).map((pair) => pair.relationships[0]);
 class ForceSimulation {
-    simulation;
-    simulationTimeout = null;
     constructor(render) {
+        this.simulationTimeout = null;
         this.simulation = forceSimulation()
             .velocityDecay(VELOCITY_DECAY)
             .force('charge', forceManyBody().strength(FORCE_CHARGE))
@@ -10288,9 +10218,6 @@ const relationshipEventHandlers = (selection, trigger) => {
 
 const noOp = () => undefined;
 class Renderer {
-    onGraphChange;
-    onTick;
-    name;
     constructor({ onGraphChange = noOp, onTick = noOp, name, }) {
         this.onGraphChange = onGraphChange;
         this.onTick = onTick;
@@ -10376,7 +10303,7 @@ const arrowPath = new Renderer({
     onTick(selection) {
         return selection
             .selectAll('path')
-            .attr('d', (d) => d.arrow.outline(d.shortCaptionLength ?? 0));
+            .attr('d', (d) => { var _a; return d.arrow.outline((_a = d.shortCaptionLength) !== null && _a !== void 0 ? _a : 0); });
     },
 });
 const relationshipType = new Renderer({
@@ -10394,19 +10321,23 @@ const relationshipType = new Renderer({
     onTick(selection, viz) {
         return selection
             .selectAll('text')
-            .attr('x', (rel) => rel?.arrow?.midShaftPoint?.x ?? 0)
-            .attr('y', (rel) => (rel?.arrow?.midShaftPoint?.y ?? 0) +
-            parseFloat(viz.style.forRelationship(rel).get('font-size')) / 2 -
-            1)
+            .attr('x', (rel) => { var _a, _b, _c; return (_c = (_b = (_a = rel === null || rel === void 0 ? void 0 : rel.arrow) === null || _a === void 0 ? void 0 : _a.midShaftPoint) === null || _b === void 0 ? void 0 : _b.x) !== null && _c !== void 0 ? _c : 0; })
+            .attr('y', (rel) => {
+            var _a, _b, _c;
+            return ((_c = (_b = (_a = rel === null || rel === void 0 ? void 0 : rel.arrow) === null || _a === void 0 ? void 0 : _a.midShaftPoint) === null || _b === void 0 ? void 0 : _b.y) !== null && _c !== void 0 ? _c : 0) +
+                parseFloat(viz.style.forRelationship(rel).get('font-size')) / 2 -
+                1;
+        })
             .attr('transform', (rel) => {
+            var _a, _b, _c, _d, _e, _f;
             if (rel.naturalAngle < 90 || rel.naturalAngle > 270) {
-                return `rotate(180 ${rel?.arrow?.midShaftPoint?.x ?? 0} ${rel?.arrow?.midShaftPoint?.y ?? 0})`;
+                return `rotate(180 ${(_c = (_b = (_a = rel === null || rel === void 0 ? void 0 : rel.arrow) === null || _a === void 0 ? void 0 : _a.midShaftPoint) === null || _b === void 0 ? void 0 : _b.x) !== null && _c !== void 0 ? _c : 0} ${(_f = (_e = (_d = rel === null || rel === void 0 ? void 0 : rel.arrow) === null || _d === void 0 ? void 0 : _d.midShaftPoint) === null || _e === void 0 ? void 0 : _e.y) !== null && _f !== void 0 ? _f : 0})`;
             }
             else {
                 return null;
             }
         })
-            .text((rel) => rel.shortCaption ?? '');
+            .text((rel) => { var _a; return (_a = rel.shortCaption) !== null && _a !== void 0 ? _a : ''; });
     },
 });
 const relationshipOverlay = new Renderer({
@@ -10465,10 +10396,7 @@ function getGraphStats(graph) {
             }
             if (labelStats[label]) {
                 labelStats[label].count = labelStats[label].count + 1;
-                labelStats[label].properties = {
-                    ...labelStats[label].properties,
-                    ...node.propertyMap,
-                };
+                labelStats[label].properties = Object.assign(Object.assign({}, labelStats[label].properties), node.propertyMap);
             }
             else {
                 labelStats[label] = {
@@ -10490,10 +10418,7 @@ function getGraphStats(graph) {
         }
         if (relTypeStats[rel.type]) {
             relTypeStats[rel.type].count = relTypeStats[rel.type].count + 1;
-            relTypeStats[rel.type].properties = {
-                ...relTypeStats[rel.type].properties,
-                ...rel.propertyMap,
-            };
+            relTypeStats[rel.type].properties = Object.assign(Object.assign({}, relTypeStats[rel.type].properties), rel.propertyMap);
         }
         else {
             relTypeStats[rel.type] = {
@@ -10506,14 +10431,6 @@ function getGraphStats(graph) {
 }
 
 class GraphEventHandlerModel {
-    getNodeNeighbours;
-    graph;
-    visualization;
-    onGraphModelChange;
-    onItemMouseOver;
-    onItemSelected;
-    onGraphInteraction;
-    selectedItem;
     constructor(graph, visualization, getNodeNeighbours, onItemMouseOver, onItemSelected, onGraphModelChange, onGraphInteraction) {
         this.graph = graph;
         this.visualization = visualization;
@@ -10521,7 +10438,7 @@ class GraphEventHandlerModel {
         this.selectedItem = null;
         this.onItemMouseOver = onItemMouseOver;
         this.onItemSelected = onItemSelected;
-        this.onGraphInteraction = onGraphInteraction ?? (() => undefined);
+        this.onGraphInteraction = onGraphInteraction !== null && onGraphInteraction !== void 0 ? onGraphInteraction : (() => undefined);
         this.onGraphModelChange = onGraphModelChange;
     }
     graphModelChanged() {
@@ -10761,38 +10678,33 @@ function compareDegree(a, b) {
     return 0;
 }
 class CircularLayout {
-    /** 布局中心 */
-    center;
-    /** 固定半径，若设置了 radius，则 startRadius 与 endRadius 不起效 */
-    radius = null;
-    /** 节点间距，若设置 nodeSpacing，则 radius 将被自动计算，即设置 radius 不生效 */
-    nodeSpacing;
-    /** 节点大小，配合 nodeSpacing，一起用于计算 radius。若不配置，节点大小默认为 30 */
-    nodeSize = undefined;
-    /** 起始半径 */
-    startRadius = null;
-    /** 终止半径 */
-    endRadius = null;
-    /** 起始角度 */
-    startAngle = 0;
-    /** 终止角度 */
-    endAngle = 2 * Math.PI;
-    /** 是否顺时针 */
-    clockwise = true;
-    /** 节点在环上分成段数（几个段将均匀分布），在 endRadius - startRadius != 0 时生效 */
-    divisions = 1;
-    /** 节点在环上排序的依据，可选: 'topology', 'degree', 'null' */
-    ordering = null;
-    /** how many 2*pi from first to last nodes */
-    angleRatio = 1;
-    nodes = [];
-    edges = [];
-    // private nodeMap: IndexMap = {};
-    degrees = [];
-    width = 300;
-    height = 300;
-    onLayoutEnd;
     constructor(options) {
+        /** 固定半径，若设置了 radius，则 startRadius 与 endRadius 不起效 */
+        this.radius = null;
+        /** 节点大小，配合 nodeSpacing，一起用于计算 radius。若不配置，节点大小默认为 30 */
+        this.nodeSize = undefined;
+        /** 起始半径 */
+        this.startRadius = null;
+        /** 终止半径 */
+        this.endRadius = null;
+        /** 起始角度 */
+        this.startAngle = 0;
+        /** 终止角度 */
+        this.endAngle = 2 * Math.PI;
+        /** 是否顺时针 */
+        this.clockwise = true;
+        /** 节点在环上分成段数（几个段将均匀分布），在 endRadius - startRadius != 0 时生效 */
+        this.divisions = 1;
+        /** 节点在环上排序的依据，可选: 'topology', 'degree', 'null' */
+        this.ordering = null;
+        /** how many 2*pi from first to last nodes */
+        this.angleRatio = 1;
+        this.nodes = [];
+        this.edges = [];
+        // private nodeMap: IndexMap = {};
+        this.degrees = [];
+        this.width = 300;
+        this.height = 300;
         this.updateConfig(options);
     }
     updateConfig(cfg) {
@@ -10817,6 +10729,7 @@ class CircularLayout {
      * 执行布局
      */
     execute() {
+        var _a;
         const self = this;
         const nodes = self.nodes;
         const edges = self.edges;
@@ -10925,7 +10838,7 @@ class CircularLayout {
             layoutNodes[i].y = center[1] + Math.sin(angle) * r;
             layoutNodes[i].degree = degrees[i].all;
         }
-        self.onLayoutEnd?.();
+        (_a = self.onLayoutEnd) === null || _a === void 0 ? void 0 : _a.call(self);
         return {
             nodes: layoutNodes,
             edges: this.edges,
@@ -11020,41 +10933,27 @@ class CircularLayout {
  * 网格布局
  */
 class GridLayout {
-    /** 布局起始点 */
-    begin = [0, 0];
-    /** prevents node overlap(重叠), may overflow boundingBox if not enough space */
-    preventOverlap = true;
-    /** extra spacing around nodes when preventOverlap: true */
-    preventOverlapPadding = 10;
-    /** uses all available space on false, uses minimal space on true */
-    condense = false;
-    /** force num of rows in the grid */
-    rows;
-    /** force num of columns in the grid */
-    cols;
-    /** the spacing between two nodes */
-    nodeSpacing;
-    /** returns { row, col } for element */
-    position;
-    /** a sorting function to order the nodes; e.g. function(a, b){ return a.datapublic ('weight') - b.data('weight') } */
-    sortBy = 'degree';
-    nodeSize;
-    nodes = [];
-    edges = [];
-    width = 300;
-    height = 300;
-    cells;
-    row = 0;
-    col = 0;
-    splits;
-    columns;
-    cellWidth = 0;
-    cellHeight = 0;
-    cellUsed = {};
-    id2manPos = {};
-    /** 迭代结束的回调函数 */
-    onLayoutEnd;
     constructor(options) {
+        /** 布局起始点 */
+        this.begin = [0, 0];
+        /** prevents node overlap(重叠), may overflow boundingBox if not enough space */
+        this.preventOverlap = true;
+        /** extra spacing around nodes when preventOverlap: true */
+        this.preventOverlapPadding = 10;
+        /** uses all available space on false, uses minimal space on true */
+        this.condense = false;
+        /** a sorting function to order the nodes; e.g. function(a, b){ return a.datapublic ('weight') - b.data('weight') } */
+        this.sortBy = 'degree';
+        this.nodes = [];
+        this.edges = [];
+        this.width = 300;
+        this.height = 300;
+        this.row = 0;
+        this.col = 0;
+        this.cellWidth = 0;
+        this.cellHeight = 0;
+        this.cellUsed = {};
+        this.id2manPos = {};
         this.updateConfig(options);
     }
     updateConfig(cfg) {
@@ -11345,33 +11244,6 @@ class GridLayout {
 }
 
 class GraphVisualization {
-    measureSize;
-    graphData;
-    isFullscreen;
-    layout;
-    wheelZoomRequiresModKey;
-    initialZoomToFit;
-    root;
-    baseGroup;
-    rect;
-    container;
-    geometry;
-    zoomBehavior;
-    // 最小缩放
-    zoomMinScaleExtent = ZOOM_MIN_SCALE;
-    callbacks = {};
-    graph;
-    style;
-    // 力仿真
-    forceSimulation;
-    // 环形布局
-    circularlayout;
-    // 网格布局
-    gridLayout;
-    // This flags that a panning is ongoing and won't trigger
-    // 'canvasClick' event when panning(平移) ends.
-    draw = false;
-    isZoomClick = false;
     constructor(element, measureSize, graphData, 
     // public style: GraphStyleModel,
     isFullscreen, layout, onZoomEvent, onDisplayZoomWheelInfoMessage, wheelZoomRequiresModKey, initialZoomToFit) {
@@ -11381,6 +11253,86 @@ class GraphVisualization {
         this.layout = layout;
         this.wheelZoomRequiresModKey = wheelZoomRequiresModKey;
         this.initialZoomToFit = initialZoomToFit;
+        // 最小缩放
+        this.zoomMinScaleExtent = ZOOM_MIN_SCALE;
+        this.callbacks = {};
+        // This flags that a panning is ongoing and won't trigger
+        // 'canvasClick' event when panning(平移) ends.
+        this.draw = false;
+        this.isZoomClick = false;
+        this.zoomByType = (zoomType) => {
+            this.draw = true;
+            this.isZoomClick = true;
+            if (zoomType === ZoomType.IN) {
+                this.zoomBehavior.scaleBy(this.root, 1.3);
+            }
+            else if (zoomType === ZoomType.OUT) {
+                this.zoomBehavior.scaleBy(this.root, 0.7);
+            }
+            else if (zoomType === ZoomType.FIT) {
+                this.zoomToFitViewport();
+                this.adjustZoomMinScaleExtentToFitGraph(1);
+            }
+        };
+        this.zoomToFitViewport = () => {
+            const scaleAndOffset = this.getZoomScaleFactorToFitWholeGraph();
+            if (scaleAndOffset) {
+                const { scale, centerPointOffset } = scaleAndOffset;
+                // Do not zoom in more than zoom max scale for really small graphs
+                this.zoomBehavior.transform(this.root, identity
+                    .scale(Math.min(scale, ZOOM_MAX_SCALE))
+                    .translate(centerPointOffset.x, centerPointOffset.y));
+            }
+        };
+        // 获取适配整个图谱的缩放大小 以及平移大小
+        this.getZoomScaleFactorToFitWholeGraph = () => {
+            var _a, _b, _c, _d;
+            const graphSize = 
+            // this.container.node()返回当前选择集的第一个元素
+            ((_a = this.container.node()) === null || _a === void 0 ? void 0 : _a.getBBox) && ((_b = this.container.node()) === null || _b === void 0 ? void 0 : _b.getBBox());
+            const availableWidth = (_c = this.root.node()) === null || _c === void 0 ? void 0 : _c.clientWidth;
+            const availableHeight = (_d = this.root.node()) === null || _d === void 0 ? void 0 : _d.clientHeight;
+            if (graphSize && availableWidth && availableHeight) {
+                const graphWidth = graphSize.width;
+                const graphHeight = graphSize.height;
+                const graphCenterX = graphSize.x + graphWidth / 2;
+                const graphCenterY = graphSize.y + graphHeight / 2;
+                if (graphWidth === 0 || graphHeight === 0)
+                    return;
+                const scale = (1 - ZOOM_FIT_PADDING_PERCENT) /
+                    Math.max(graphWidth / availableWidth, graphHeight / availableHeight);
+                const centerPointOffset = { x: -graphCenterX, y: -graphCenterY };
+                return { scale: scale, centerPointOffset: centerPointOffset };
+            }
+            return;
+        };
+        this.adjustZoomMinScaleExtentToFitGraph = (padding_factor = 0.75) => {
+            const scaleAndOffset = this.getZoomScaleFactorToFitWholeGraph();
+            const scaleToFitGraphWithPadding = scaleAndOffset
+                ? scaleAndOffset.scale * padding_factor
+                : this.zoomMinScaleExtent;
+            if (scaleToFitGraphWithPadding <= this.zoomMinScaleExtent) {
+                this.zoomMinScaleExtent = scaleToFitGraphWithPadding;
+                this.zoomBehavior.scaleExtent([
+                    scaleToFitGraphWithPadding,
+                    ZOOM_MAX_SCALE,
+                ]);
+            }
+        };
+        this.on = (event, callback) => {
+            var _a;
+            if (isNullish(this.callbacks[event])) {
+                this.callbacks[event] = [];
+            }
+            (_a = this.callbacks[event]) === null || _a === void 0 ? void 0 : _a.push(callback);
+            return this;
+        };
+        this.trigger = (event, ...args) => {
+            var _a;
+            const callbacksForEvent = (_a = this.callbacks[event]) !== null && _a !== void 0 ? _a : [];
+            // eslint-disable-next-line prefer-spread
+            callbacksForEvent.forEach((callback) => callback.apply(null, args));
+        };
         this.root = d3Select(element);
         // 初始化配置
         this.initConfig(isFullscreen, layout, wheelZoomRequiresModKey);
@@ -11510,13 +11462,14 @@ class GraphVisualization {
         }
     }
     update(options) {
+        var _a;
         if (options.updateNodes) {
             this.updateNodes();
         }
         if (options.updateRelationships) {
             this.updateRelationships();
         }
-        if (options.restartSimulation ?? true) {
+        if ((_a = options.restartSimulation) !== null && _a !== void 0 ? _a : true) {
             this.forceSimulation.restart();
         }
         this.trigger('updated');
@@ -11571,68 +11524,10 @@ class GraphVisualization {
             .attr('transform', (d) => `translate(${d.source.x} ${d.source.y}) rotate(${d.naturalAngle + 180})`);
         relationship.forEach((renderer) => relationshipGroups.call(renderer.onTick, this));
     }
-    zoomByType = (zoomType) => {
-        this.draw = true;
-        this.isZoomClick = true;
-        if (zoomType === ZoomType.IN) {
-            this.zoomBehavior.scaleBy(this.root, 1.3);
-        }
-        else if (zoomType === ZoomType.OUT) {
-            this.zoomBehavior.scaleBy(this.root, 0.7);
-        }
-        else if (zoomType === ZoomType.FIT) {
-            this.zoomToFitViewport();
-            this.adjustZoomMinScaleExtentToFitGraph(1);
-        }
-    };
-    zoomToFitViewport = () => {
-        const scaleAndOffset = this.getZoomScaleFactorToFitWholeGraph();
-        if (scaleAndOffset) {
-            const { scale, centerPointOffset } = scaleAndOffset;
-            // Do not zoom in more than zoom max scale for really small graphs
-            this.zoomBehavior.transform(this.root, identity
-                .scale(Math.min(scale, ZOOM_MAX_SCALE))
-                .translate(centerPointOffset.x, centerPointOffset.y));
-        }
-    };
-    // 获取适配整个图谱的缩放大小 以及平移大小
-    getZoomScaleFactorToFitWholeGraph = () => {
-        const graphSize = 
-        // this.container.node()返回当前选择集的第一个元素
-        this.container.node()?.getBBox && this.container.node()?.getBBox();
-        const availableWidth = this.root.node()?.clientWidth;
-        const availableHeight = this.root.node()?.clientHeight;
-        if (graphSize && availableWidth && availableHeight) {
-            const graphWidth = graphSize.width;
-            const graphHeight = graphSize.height;
-            const graphCenterX = graphSize.x + graphWidth / 2;
-            const graphCenterY = graphSize.y + graphHeight / 2;
-            if (graphWidth === 0 || graphHeight === 0)
-                return;
-            const scale = (1 - ZOOM_FIT_PADDING_PERCENT) /
-                Math.max(graphWidth / availableWidth, graphHeight / availableHeight);
-            const centerPointOffset = { x: -graphCenterX, y: -graphCenterY };
-            return { scale: scale, centerPointOffset: centerPointOffset };
-        }
-        return;
-    };
-    adjustZoomMinScaleExtentToFitGraph = (padding_factor = 0.75) => {
-        const scaleAndOffset = this.getZoomScaleFactorToFitWholeGraph();
-        const scaleToFitGraphWithPadding = scaleAndOffset
-            ? scaleAndOffset.scale * padding_factor
-            : this.zoomMinScaleExtent;
-        if (scaleToFitGraphWithPadding <= this.zoomMinScaleExtent) {
-            this.zoomMinScaleExtent = scaleToFitGraphWithPadding;
-            this.zoomBehavior.scaleExtent([
-                scaleToFitGraphWithPadding,
-                ZOOM_MAX_SCALE,
-            ]);
-        }
-    };
     setInitialZoom() {
         const count = this.graph.nodes().length;
         // chosen by *feel* (graph fitting guesstimate)
-        const scale = -0.02364554 + 1.913 / (1 + (count / 12.7211) ** 0.8156444);
+        const scale = -0.02364554 + 1.913 / (1 + Math.pow((count / 12.7211), 0.8156444));
         this.zoomBehavior.scaleBy(this.root, Math.max(0, scale));
     }
     precomputeAndStart() {
@@ -11654,7 +11549,8 @@ class GraphVisualization {
         ].join(' '));
     }
     boundingBox() {
-        return this.container.node()?.getBBox();
+        var _a;
+        return (_a = this.container.node()) === null || _a === void 0 ? void 0 : _a.getBBox();
     }
     // init graph bind event
     initEventHandler(getNodeNeighbours, onItemMouseOver, onItemSelect, onGraphModelChange, onGraphInteraction) {
@@ -11662,18 +11558,6 @@ class GraphVisualization {
         graphEventHandler.bindEventHandlers();
         return graphEventHandler;
     }
-    on = (event, callback) => {
-        if (isNullish(this.callbacks[event])) {
-            this.callbacks[event] = [];
-        }
-        this.callbacks[event]?.push(callback);
-        return this;
-    };
-    trigger = (event, ...args) => {
-        const callbacksForEvent = this.callbacks[event] ?? [];
-        // eslint-disable-next-line prefer-spread
-        callbacksForEvent.forEach((callback) => callback.apply(null, args));
-    };
     // 环形布局
     cricularLayoutHandler() {
         // 关闭力模型布局
