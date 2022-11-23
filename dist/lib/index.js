@@ -11497,9 +11497,6 @@ class GraphVisualization {
             // 如果被选中 那么添加对应的选择样式
             .classed('selected', (node) => node.selected);
         node.forEach((renderer) => nodeGroups.call(renderer.onGraphChange, this));
-        this.layout === 'force' && this.forceSimulation.updateNodes(this.graph);
-        this.layout === 'force' &&
-            this.forceSimulation.updateRelationships(this.graph);
     }
     updateRelationships() {
         const relationships = this.graph.relationships();
@@ -11516,8 +11513,6 @@ class GraphVisualization {
             .call(relationshipEventHandlers, this.trigger)
             .classed('selected', (relationship) => relationship.selected);
         relationship.forEach((renderer) => relationshipGroups.call(renderer.onGraphChange, this));
-        this.layout === 'force' &&
-            this.forceSimulation.updateRelationships(this.graph);
     }
     render() {
         this.geometry.onTick(this.graph);
@@ -11594,6 +11589,9 @@ class GraphVisualization {
         this.adjustZoomMinScaleExtentToFitGraph();
         this.setInitialZoom();
         this.forceSimulation = new ForceSimulation(this.render.bind(this));
+        this.forceSimulation.updateNodes(this.graph);
+        this.forceSimulation.updateRelationships(this.graph);
+        this.forceSimulation.updateRelationships(this.graph);
         this.precomputeAndStart();
     }
     // 网格布局

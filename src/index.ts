@@ -282,10 +282,6 @@ export default class GraphVisualization {
     nodeRenderer.forEach((renderer) =>
       nodeGroups.call(renderer.onGraphChange, this),
     );
-
-    this.layout === 'force' && this.forceSimulation.updateNodes(this.graph);
-    this.layout === 'force' &&
-      this.forceSimulation.updateRelationships(this.graph);
   }
 
   private updateRelationships() {
@@ -307,9 +303,6 @@ export default class GraphVisualization {
     relationshipRenderer.forEach((renderer) =>
       relationshipGroups.call(renderer.onGraphChange, this),
     );
-
-    this.layout === 'force' &&
-      this.forceSimulation.updateRelationships(this.graph);
   }
 
   private render() {
@@ -523,6 +516,9 @@ export default class GraphVisualization {
     this.adjustZoomMinScaleExtentToFitGraph();
     this.setInitialZoom();
     this.forceSimulation = new ForceSimulation(this.render.bind(this));
+    this.forceSimulation.updateNodes(this.graph);
+    this.forceSimulation.updateRelationships(this.graph);
+    this.forceSimulation.updateRelationships(this.graph);
     this.precomputeAndStart();
   }
 
