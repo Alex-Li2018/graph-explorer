@@ -104,6 +104,31 @@ export const nodeForceDragEventHandlers = (
   );
 };
 
+export const nodeDragEventHandlers = (
+  selection: Selection<SVGGElement, NodeModel, BaseType, unknown>,
+) => {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const dragstarted = () => {};
+
+  const dragged = (
+    event: D3DragEvent<SVGGElement, NodeModel, any>,
+    node: NodeModel,
+  ) => {
+    node.x = event.x;
+    node.y = event.y;
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const dragended = () => {};
+
+  return selection.call(
+    d3Drag<SVGGElement, NodeModel>()
+      .on('start', dragstarted)
+      .on('drag', dragged)
+      .on('end', dragended),
+  );
+};
+
 export const relationshipEventHandlers = (
   selection: Selection<SVGGElement, RelationshipModel, BaseType, unknown>,
   trigger: (event: string, rel: RelationshipModel) => void,

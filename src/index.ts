@@ -24,6 +24,7 @@ import {
   nodeEventHandlers,
   relationshipEventHandlers,
   nodeForceDragEventHandlers,
+  nodeDragEventHandlers,
 } from './mouseEventHandlers';
 import {
   node as nodeRenderer,
@@ -280,6 +281,14 @@ export default class GraphVisualization {
       // 如果被选中 那么添加对应的选择样式
       .classed('selected', (node) => node.selected);
 
+    if (this.layout !== 'force') {
+      // drag事件
+      this.container
+        .select('g.layer.nodes')
+        .selectAll<SVGGElement, NodeModel>('g.node')
+        .call(nodeDragEventHandlers);
+    }
+
     nodeRenderer.forEach((renderer) =>
       nodeGroups.call(renderer.onGraphChange, this),
     );
@@ -522,9 +531,7 @@ export default class GraphVisualization {
     this.container
       .select('g.layer.nodes')
       .selectAll<SVGGElement, NodeModel>('g.node')
-      .call(nodeForceDragEventHandlers, this.forceSimulation.simulation)
-      // 如果被选中 那么添加对应的选择样式
-      .classed('selected', (node) => node.selected);
+      .call(nodeForceDragEventHandlers, this.forceSimulation.simulation);
 
     this.forceSimulation.updateNodes(this.graph);
     this.forceSimulation.updateRelationships(this.graph);

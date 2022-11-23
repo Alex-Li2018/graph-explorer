@@ -10208,6 +10208,22 @@ const nodeForceDragEventHandlers = (selection, simulation) => {
         .on('drag', dragged)
         .on('end', dragended));
 };
+const nodeDragEventHandlers = (selection) => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    const dragstarted = () => { };
+    const dragged = (event, node) => {
+      node.fx = null
+      node.fy = null
+        node.x = event.x;
+        node.y = event.y;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    const dragended = () => { };
+    return selection.call(d3Drag()
+        .on('start', dragstarted)
+        .on('drag', dragged)
+        .on('end', dragended));
+};
 const relationshipEventHandlers = (selection, trigger) => {
     const onRelationshipClick = (event, rel) => {
         event.stopPropagation();
@@ -11499,6 +11515,13 @@ class GraphVisualization {
             .call(nodeEventHandlers, this.trigger)
             // 如果被选中 那么添加对应的选择样式
             .classed('selected', (node) => node.selected);
+        if (this.layout !== 'force') {
+            // drag事件
+            this.container
+                .select('g.layer.nodes')
+                .selectAll('g.node')
+                .call(nodeDragEventHandlers);
+        }
         node.forEach((renderer) => nodeGroups.call(renderer.onGraphChange, this));
     }
     updateRelationships() {
@@ -11596,9 +11619,7 @@ class GraphVisualization {
         this.container
             .select('g.layer.nodes')
             .selectAll('g.node')
-            .call(nodeForceDragEventHandlers, this.forceSimulation.simulation)
-            // 如果被选中 那么添加对应的选择样式
-            .classed('selected', (node) => node.selected);
+            .call(nodeForceDragEventHandlers, this.forceSimulation.simulation);
         this.forceSimulation.updateNodes(this.graph);
         this.forceSimulation.updateRelationships(this.graph);
         this.forceSimulation.updateRelationships(this.graph);
