@@ -23,6 +23,7 @@ import { ForceSimulation } from './layout/force/ForceSimulation';
 import {
   nodeEventHandlers,
   relationshipEventHandlers,
+  nodeForceDragEventHandlers,
 } from './mouseEventHandlers';
 import {
   node as nodeRenderer,
@@ -275,7 +276,7 @@ export default class GraphVisualization {
       .join('g')
       .attr('class', 'node')
       .attr('aria-label', (d) => `graph-node${d.id}`)
-      .call(nodeEventHandlers, this.trigger, this.forceSimulation)
+      .call(nodeEventHandlers, this.trigger)
       // 如果被选中 那么添加对应的选择样式
       .classed('selected', (node) => node.selected);
 
@@ -516,6 +517,15 @@ export default class GraphVisualization {
     this.adjustZoomMinScaleExtentToFitGraph();
     this.setInitialZoom();
     this.forceSimulation = new ForceSimulation(this.render.bind(this));
+
+    // drag事件
+    this.container
+      .select('g.layer.nodes')
+      .selectAll<SVGGElement, NodeModel>('g.node')
+      .call(nodeForceDragEventHandlers, this.forceSimulation.simulation)
+      // 如果被选中 那么添加对应的选择样式
+      .classed('selected', (node) => node.selected);
+
     this.forceSimulation.updateNodes(this.graph);
     this.forceSimulation.updateRelationships(this.graph);
     this.forceSimulation.updateRelationships(this.graph);

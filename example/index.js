@@ -10140,10 +10140,7 @@ class ForceSimulation {
     }
 }
 
-const nodeEventHandlers = (selection, trigger, simulation) => {
-    let initialDragPosition;
-    let restartedSimulation = false;
-    const tolerance = 25;
+const nodeEventHandlers = (selection, trigger) => {
     const onNodeClick = (_event, node) => {
         trigger('nodeClicked', node);
     };
@@ -10166,6 +10163,17 @@ const nodeEventHandlers = (selection, trigger, simulation) => {
         }
         trigger('nodeMouseOut', node);
     };
+    return selection
+        .on('mouseover', onNodeMouseOver)
+        .on('mouseout', onNodeMouseOut)
+        .on('click', onNodeClick)
+        .on('dblclick', onNodeDblClick);
+};
+// 力模型的拖拽事件
+const nodeForceDragEventHandlers = (selection, simulation) => {
+    let initialDragPosition;
+    let restartedSimulation = false;
+    const tolerance = 25;
     const dragstarted = (event) => {
         initialDragPosition = [event.x, event.y];
         restartedSimulation = false;
@@ -10195,15 +10203,10 @@ const nodeEventHandlers = (selection, trigger, simulation) => {
             simulation.alphaTarget(DEFAULT_ALPHA_TARGET);
         }
     };
-    return selection
-        .call(d3Drag()
+    return selection.call(d3Drag()
         .on('start', dragstarted)
         .on('drag', dragged)
-        .on('end', dragended))
-        .on('mouseover', onNodeMouseOver)
-        .on('mouseout', onNodeMouseOut)
-        .on('click', onNodeClick)
-        .on('dblclick', onNodeDblClick);
+        .on('end', dragended));
 };
 const relationshipEventHandlers = (selection, trigger) => {
     const onRelationshipClick = (event, rel) => {
@@ -11493,7 +11496,7 @@ class GraphVisualization {
             .join('g')
             .attr('class', 'node')
             .attr('aria-label', (d) => `graph-node${d.id}`)
-            .call(nodeEventHandlers, this.trigger, this.forceSimulation)
+            .call(nodeEventHandlers, this.trigger)
             // 如果被选中 那么添加对应的选择样式
             .classed('selected', (node) => node.selected);
         node.forEach((renderer) => nodeGroups.call(renderer.onGraphChange, this));
@@ -11589,6 +11592,13 @@ class GraphVisualization {
         this.adjustZoomMinScaleExtentToFitGraph();
         this.setInitialZoom();
         this.forceSimulation = new ForceSimulation(this.render.bind(this));
+        // drag事件
+        this.container
+            .select('g.layer.nodes')
+            .selectAll('g.node')
+            .call(nodeForceDragEventHandlers, this.forceSimulation.simulation)
+            // 如果被选中 那么添加对应的选择样式
+            .classed('selected', (node) => node.selected);
         this.forceSimulation.updateNodes(this.graph);
         this.forceSimulation.updateRelationships(this.graph);
         this.forceSimulation.updateRelationships(this.graph);

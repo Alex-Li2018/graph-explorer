@@ -13,12 +13,7 @@ import { RelationshipModel } from './models/Relationship';
 export const nodeEventHandlers = (
   selection: Selection<SVGGElement, NodeModel, BaseType, unknown>,
   trigger: (event: string, node: NodeModel) => void,
-  simulation: Simulation<NodeModel, RelationshipModel>,
 ) => {
-  let initialDragPosition: [number, number];
-  let restartedSimulation = false;
-  const tolerance = 25;
-
   const onNodeClick = (_event: Event, node: NodeModel) => {
     trigger('nodeClicked', node);
   };
@@ -46,6 +41,22 @@ export const nodeEventHandlers = (
 
     trigger('nodeMouseOut', node);
   };
+
+  return selection
+    .on('mouseover', onNodeMouseOver)
+    .on('mouseout', onNodeMouseOut)
+    .on('click', onNodeClick)
+    .on('dblclick', onNodeDblClick);
+};
+
+// 力模型的拖拽事件
+export const nodeForceDragEventHandlers = (
+  selection: Selection<SVGGElement, NodeModel, BaseType, unknown>,
+  simulation?: Simulation<NodeModel, RelationshipModel>,
+) => {
+  let initialDragPosition: [number, number];
+  let restartedSimulation = false;
+  const tolerance = 25;
 
   const dragstarted = (event: D3DragEvent<SVGGElement, NodeModel, any>) => {
     initialDragPosition = [event.x, event.y];
@@ -85,17 +96,12 @@ export const nodeEventHandlers = (
     }
   };
 
-  return selection
-    .call(
-      d3Drag<SVGGElement, NodeModel>()
-        .on('start', dragstarted)
-        .on('drag', dragged)
-        .on('end', dragended),
-    )
-    .on('mouseover', onNodeMouseOver)
-    .on('mouseout', onNodeMouseOut)
-    .on('click', onNodeClick)
-    .on('dblclick', onNodeDblClick);
+  return selection.call(
+    d3Drag<SVGGElement, NodeModel>()
+      .on('start', dragstarted)
+      .on('drag', dragged)
+      .on('end', dragended),
+  );
 };
 
 export const relationshipEventHandlers = (
