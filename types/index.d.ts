@@ -201,7 +201,7 @@ declare enum ZoomType {
     FIT = "fit"
 }
 declare type GetNodeNeighboursFn = (node: BasicNode | NodeModel, currentNeighbourIds: string[], callback: (data: BasicNodesAndRels) => void) => void;
-declare type LayoutType = 'force' | 'cricular' | 'grid';
+declare type LayoutType = 'force' | 'circular' | 'grid';
 declare type PointTuple = [number, number];
 interface CircularLayoutOptions {
     type: 'circular';

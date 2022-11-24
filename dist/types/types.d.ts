@@ -66,7 +66,7 @@ export declare enum ZoomType {
     FIT = "fit"
 }
 export declare type GetNodeNeighboursFn = (node: BasicNode | NodeModel, currentNeighbourIds: string[], callback: (data: BasicNodesAndRels) => void) => void;
-export declare type LayoutType = 'force' | 'cricular' | 'grid';
+export declare type LayoutType = 'force' | 'circular' | 'grid';
 export declare type PointTuple = [number, number];
 export declare type IndexMap = {
     [key: string]: number;

@@ -11587,7 +11587,7 @@ class GraphVisualization {
             case 'force':
                 this.forceSimulationHandler();
                 break;
-            case 'cricular':
+            case 'circular':
                 this.cricularLayoutHandler();
                 break;
             case 'grid':
