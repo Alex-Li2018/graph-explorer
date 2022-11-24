@@ -10212,8 +10212,6 @@ const nodeDragEventHandlers = (selection) => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     const dragstarted = () => { };
     const dragged = (event, node) => {
-      node.fx = null
-      node.fy = null
         node.x = event.x;
         node.y = event.y;
     };
@@ -11641,6 +11639,10 @@ class GraphVisualization {
         });
         this.gridLayout.execute();
         this.render();
+    }
+    // 销毁画布
+    destroy() {
+        this.root.selectChildren().remove();
     }
 }
 

@@ -11,23 +11,27 @@
             width: 100%;
             height: 700px;
             border: 1px solid red;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
+    <bUtton id="force">力导向</bUtton>
+    <bUtton id="ring">环形</bUtton>
+    <bUtton id="grid">网格</bUtton>
     <div class="graph-data_wrap">
         <svg id="graph_wrap"></svg>
     </div>
     <script src="./index.js"></script>
 
     <script>
-        const domRef = '#graph_wrap'
-        const measureSize = () => ({
+        var domRef = '#graph_wrap'
+        var measureSize = () => ({
             width: document.getElementById('graph_wrap').clientWidth || 200,
             height: document.getElementById('graph_wrap').clientHeight || 200
         })
 
-        const graphData = {
+        var graphData = {
             nodes: [
                 {
                     "id": "85",
@@ -133,31 +137,55 @@
                 }
             ]
         }
-        const instance = new GraphVisualization(
-            domRef,
-            measureSize,
-            graphData,
-            false,
-            'cricular',
-        )
+    </script>
 
-        // instance.precomputeAndStart()
-        function GetNodeNeighboursFn(node, currentNeighbourIds, ) {
-            console.log(node, currentNeighbourIds)
+    <script>
+        function graphRender(domRef, measureSize, graphData, layoutType) {
+            var instance = new GraphVisualization(
+                domRef,
+                measureSize,
+                graphData,
+                false,
+                layoutType,
+            )
+
+            // instance.precomputeAndStart()
+            function GetNodeNeighboursFn(node, currentNeighbourIds, ) {
+                console.log(node, currentNeighbourIds)
+            }
+            function onItemMouseOver (item) {
+                console.log('onItemMouseOver', item)
+            }
+            function onItemSelected(item) {
+                console.log('onItemSelected', item)
+            }
+            function onGraphModelChange(state) {
+                console.log('onGraphModelChange', state)
+            }
+            function onGraphInteraction(event) {
+                console.log('onGraphInteraction', event)
+            }
+            instance.initEventHandler(GetNodeNeighboursFn, onItemMouseOver, onItemSelected, onGraphModelChange, onGraphInteraction)
+
+            return instance
         }
-        function onItemMouseOver (item) {
-            console.log('onItemMouseOver', item)
+    </script>
+
+    <script>
+        var instance = null
+        document.getElementById('force').onclick = function() {
+            instance && instance.destroy()
+            instance = graphRender(domRef, measureSize, graphData, 'force')
         }
-        function onItemSelected(item) {
-            console.log('onItemSelected', item)
+        document.getElementById('ring').onclick = function() {
+            console.log(instance)
+            instance && instance.destroy()
+            instance = graphRender(domRef, measureSize, graphData, 'cricular')
         }
-        function onGraphModelChange(state) {
-            console.log('onGraphModelChange', state)
+        document.getElementById('grid').onclick = function() {
+            instance && instance.destroy()
+            instance = graphRender(domRef, measureSize, graphData, 'grid')
         }
-        function onGraphInteraction(event) {
-            console.log('onGraphInteraction', event)
-        }
-        instance.initEventHandler(GetNodeNeighboursFn, onItemMouseOver, onItemSelected, onGraphModelChange, onGraphInteraction)
     </script>
 </body>
 </html>

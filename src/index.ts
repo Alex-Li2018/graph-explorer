@@ -559,4 +559,9 @@ export default class GraphVisualization {
     this.gridLayout.execute();
     this.render();
   }
+
+  // 销毁画布
+  public destroy() {
+    this.root.selectChildren().remove();
+  }
 }

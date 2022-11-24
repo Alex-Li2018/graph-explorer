@@ -588,6 +588,7 @@ declare class GraphVisualization {
     cricularLayoutHandler(): void;
     forceSimulationHandler(): void;
     gridLayoutHandler(): void;
+    destroy(): void;
 }
 
 export { GraphVisualization as default };

@@ -11634,6 +11634,10 @@ class GraphVisualization {
         this.gridLayout.execute();
         this.render();
     }
+    // 销毁画布
+    destroy() {
+        this.root.selectChildren().remove();
+    }
 }
 
 export { GraphVisualization as default };
