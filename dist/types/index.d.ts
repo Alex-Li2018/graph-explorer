@@ -7,6 +7,7 @@ import { GraphEventHandlerModel, GraphInteraction } from './GraphEventHandlerMod
 import { GraphStats } from './utils/mapper';
 import { CircularLayout } from './layout/CircularLayout';
 import { GridLayout } from './layout/GridLayout';
+import { DownloadImageOptions } from './imageDownload';
 declare type MeasureSizeFn = () => {
     width: number;
     height: number;
@@ -65,6 +66,7 @@ export default class GraphVisualization {
     cricularLayoutHandler(): void;
     forceSimulationHandler(): void;
     gridLayoutHandler(): void;
+    downloadImage(dom: Element, fileName?: string, options?: DownloadImageOptions): void;
     destroy(): void;
 }
 export {};

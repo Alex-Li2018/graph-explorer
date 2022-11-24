@@ -44,6 +44,7 @@ import {
 import { GraphStats } from './utils/mapper';
 import { CircularLayout } from './layout/CircularLayout';
 import { GridLayout } from './layout/GridLayout';
+import { svgToImageDownload, DownloadImageOptions } from './imageDownload';
 
 type MeasureSizeFn = () => { width: number; height: number };
 type ZoomEvent = (limitsReached: ZoomLimitsReached) => void;
@@ -558,6 +559,15 @@ export default class GraphVisualization {
 
     this.gridLayout.execute();
     this.render();
+  }
+
+  // 下载图片
+  public downloadImage(
+    dom: Element,
+    fileName?: string,
+    options?: DownloadImageOptions,
+  ) {
+    svgToImageDownload(dom, fileName, options);
   }
 
   // 销毁画布

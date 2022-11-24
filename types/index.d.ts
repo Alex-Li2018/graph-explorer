@@ -530,6 +530,17 @@ declare class GridLayout {
     getType(): string;
 }
 
+declare type DataUrlType = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/bmp';
+interface DownloadImageOptions {
+    scale: number;
+    format: DataUrlType;
+    quality: number;
+    download: boolean;
+    cssinline: number;
+    ignore?: boolean | null;
+    background?: string | null;
+}
+
 declare type MeasureSizeFn = () => {
     width: number;
     height: number;
@@ -588,6 +599,7 @@ declare class GraphVisualization {
     cricularLayoutHandler(): void;
     forceSimulationHandler(): void;
     gridLayoutHandler(): void;
+    downloadImage(dom: Element, fileName?: string, options?: DownloadImageOptions): void;
     destroy(): void;
 }
 

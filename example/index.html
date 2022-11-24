@@ -19,6 +19,7 @@
     <bUtton id="force">力导向</bUtton>
     <bUtton id="ring">环形</bUtton>
     <bUtton id="grid">网格</bUtton>
+    <bUtton id="download">下载</bUtton>
     <div class="graph-data_wrap">
         <svg id="graph_wrap"></svg>
     </div>
@@ -185,6 +186,14 @@
         document.getElementById('grid').onclick = function() {
             instance && instance.destroy()
             instance = graphRender(domRef, measureSize, graphData, 'grid')
+        }
+    </script>
+
+    <script>
+        const dom = document.getElementById('graph_wrap')
+
+        document.getElementById('download').onclick = function() {
+            instance && instance.downloadImage(dom, '可视化')
         }
     </script>
 </body>

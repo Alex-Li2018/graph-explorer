@@ -11260,6 +11260,117 @@ class GridLayout {
     }
 }
 
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
+
+function inlineStyles(source, target) {
+    // inline style from source element to the target (detached) one
+    const computed = window.getComputedStyle(source);
+    for (const styleKey of Array.prototype.slice.call(computed)) {
+        target.style[styleKey] = computed[styleKey];
+    }
+    // recursively call inlineStyles for the element children
+    for (let i = 0; i < source.children.length; i++) {
+        inlineStyles(source.children[i], target.children[i]);
+    }
+}
+function copyToCanvas(source, target, scale, format, quality) {
+    const svgData = new XMLSerializer().serializeToString(target);
+    const canvas = document.createElement('canvas');
+    const svgSize = source.getBoundingClientRect();
+    //Resize can break shadows
+    canvas.width = svgSize.width * scale;
+    canvas.height = svgSize.height * scale;
+    canvas.style.width = `${svgSize.width}`;
+    canvas.style.height = `${svgSize.height}`;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    const img = document.createElement('img');
+    img.setAttribute('src', 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData))));
+    return new Promise((resolve) => {
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL(format, quality));
+        };
+    });
+}
+function downloadImage(file, name, format) {
+    const a = document.createElement('a');
+    a.download = `${name}.${format.split('/')[1]}`;
+    a.href = file;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+function updateConfig(options) {
+    return Object.assign(options || {}, {
+        scale: 1,
+        format: 'image/png',
+        quality: 0.92,
+        download: true,
+        ignore: null,
+        cssinline: 1,
+        background: null,
+    });
+}
+function svgToImageDownload(sourceDom, fileName, options) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { scale, format, quality, download, ignore, cssinline, background } = updateConfig(options);
+        // Accept a selector or directly a DOM Element
+        const source = (sourceDom instanceof Element
+            ? sourceDom
+            : document.querySelector(sourceDom));
+        // Create a new SVG element similar to the source one to avoid modifying the
+        // source element.
+        const target = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        target.innerHTML = source.innerHTML;
+        for (const attr of Array.prototype.slice.call(source.attributes)) {
+            target.setAttribute(attr.name, attr.value);
+        }
+        // Set all the css styles inline on the target element based on the styles
+        // of the source element
+        if (cssinline === 1) {
+            inlineStyles(source, target);
+        }
+        if (background) {
+            target.style.background = background;
+        }
+        //Remove unwanted elements
+        if (ignore !== null) {
+            const elt = target.querySelector(ignore);
+            elt.parentNode.removeChild(elt);
+        }
+        //Copy all html to a new canvas
+        const file = yield copyToCanvas(source, target, scale, format, quality);
+        if (download) {
+            downloadImage(file, fileName || 'graph', format);
+        }
+        return file;
+    });
+}
+
 class GraphVisualization {
     constructor(element, measureSize, graphData, 
     // public style: GraphStyleModel,
@@ -11633,6 +11744,10 @@ class GraphVisualization {
         });
         this.gridLayout.execute();
         this.render();
+    }
+    // 下载图片
+    downloadImage(dom, fileName, options) {
+        svgToImageDownload(dom, fileName, options);
     }
     // 销毁画布
     destroy() {
