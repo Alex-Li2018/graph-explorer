@@ -155,7 +155,7 @@
                 console.log(node, currentNeighbourIds)
             }
             function onItemMouseOver (item) {
-                console.log('onItemMouseOver', item)
+                // console.log('onItemMouseOver', item)
             }
             function onItemSelected(item) {
                 console.log('onItemSelected', item)
@@ -163,8 +163,8 @@
             function onGraphModelChange(state) {
                 console.log('onGraphModelChange', state)
             }
-            function onGraphInteraction(event) {
-                console.log('onGraphInteraction', event)
+            function onGraphInteraction(event, e) {
+                console.log('onGraphInteraction', event, e)
             }
             instance.initEventHandler(GetNodeNeighboursFn, onItemMouseOver, onItemSelected, onGraphModelChange, onGraphInteraction)
 

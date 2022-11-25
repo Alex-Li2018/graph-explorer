@@ -2,23 +2,13 @@ import { GraphModel } from './models/Graph';
 import { NodeModel } from './models/Node';
 import { RelationshipModel } from './models/Relationship';
 import { GetNodeNeighboursFn, VizItem } from './types';
-import {
-  GraphStats,
-  getGraphStats,
-  mapNodes,
-  mapRelationships,
-} from './utils/mapper';
+import { GraphStats, getGraphStats } from './utils/mapper';
 import GraphVisualization from './index';
 
 export type GraphInteraction =
   | 'NODE_EXPAND'
   | 'NODE_UNPINNED'
   | 'NODE_DISMISSED';
-
-export type GraphInteractionCallBack = (
-  event: GraphInteraction,
-  properties?: Record<string, unknown>,
-) => void;
 
 export class GraphEventHandlerModel {
   getNodeNeighbours: GetNodeNeighboursFn;
@@ -27,7 +17,7 @@ export class GraphEventHandlerModel {
   onGraphModelChange: (stats: GraphStats) => void;
   onItemMouseOver: (item: VizItem) => void;
   onItemSelected: (item: VizItem) => void;
-  onGraphInteraction: GraphInteractionCallBack;
+  onGraphInteraction: (item: VizItem, event: Event) => void;
   selectedItem: NodeModel | RelationshipModel | null;
 
   constructor(
@@ -37,7 +27,7 @@ export class GraphEventHandlerModel {
     onItemMouseOver: (item: VizItem) => void,
     onItemSelected: (item: VizItem) => void,
     onGraphModelChange: (stats: GraphStats) => void,
-    onGraphInteraction?: (event: GraphInteraction) => void,
+    onGraphInteraction: (item: VizItem, event: Event) => void,
   ) {
     this.graph = graph;
     this.visualization = visualization;
@@ -45,7 +35,7 @@ export class GraphEventHandlerModel {
     this.selectedItem = null;
     this.onItemMouseOver = onItemMouseOver;
     this.onItemSelected = onItemSelected;
-    this.onGraphInteraction = onGraphInteraction ?? (() => undefined);
+    this.onGraphInteraction = onGraphInteraction;
 
     this.onGraphModelChange = onGraphModelChange;
   }
@@ -90,6 +80,7 @@ export class GraphEventHandlerModel {
     });
   }
 
+  // 隐藏该节点
   nodeClose(d: NodeModel): void {
     this.graph.removeConnectedRelationships(d);
     this.graph.removeNode(d);
@@ -100,7 +91,24 @@ export class GraphEventHandlerModel {
       restartSimulation: true,
     });
     this.graphModelChanged();
-    this.onGraphInteraction('NODE_DISMISSED');
+  }
+
+  // 不固定节点
+  nodeUnlock(d: NodeModel): void {
+    if (!d) {
+      return;
+    }
+    d.fx = null;
+    d.fy = null;
+    this.deselectItem();
+  }
+
+  // 展开该节点
+  nodeCollapse(d: NodeModel): void {
+    d.expanded = false;
+    this.graph.collapseNode(d);
+    this.visualization.update({ updateNodes: true, updateRelationships: true });
+    this.graphModelChanged();
   }
 
   nodeClicked(node: NodeModel): void {
@@ -121,43 +129,28 @@ export class GraphEventHandlerModel {
     }
   }
 
-  nodeUnlock(d: NodeModel): void {
-    if (!d) {
-      return;
-    }
-    d.fx = null;
-    d.fy = null;
-    this.deselectItem();
-    this.onGraphInteraction('NODE_UNPINNED');
-  }
-
-  nodeDblClicked(d: NodeModel): void {
-    if (d.expanded) {
-      this.nodeCollapse(d);
-      return;
-    }
-    d.expanded = true;
-    const graph = this.graph;
-    const visualization = this.visualization;
-    const graphModelChanged = this.graphModelChanged.bind(this);
-    this.getNodeNeighbours(
-      d,
-      this.graph.findNodeNeighbourIds(d.id),
-      ({ nodes, relationships }) => {
-        graph.addExpandedNodes(d, mapNodes(nodes));
-        graph.addRelationships(mapRelationships(relationships, graph));
-        visualization.update({ updateNodes: true, updateRelationships: true });
-        graphModelChanged();
+  // 节点双击 触发
+  nodeDblClicked(d: NodeModel, event: Event): void {
+    // const graph = this.graph;
+    // const visualization = this.visualization;
+    // const graphModelChanged = this.graphModelChanged.bind(this);
+    // this.getNodeNeighbours(
+    //   d,
+    //   this.graph.findNodeNeighbourIds(d.id),
+    //   ({ nodes, relationships }) => {
+    //     graph.addExpandedNodes(d, mapNodes(nodes));
+    //     graph.addRelationships(mapRelationships(relationships, graph));
+    //     visualization.update({ updateNodes: true, updateRelationships: true });
+    //     graphModelChanged();
+    //   },
+    // );
+    this.onGraphInteraction(
+      {
+        type: 'node',
+        item: d,
       },
+      event,
     );
-    this.onGraphInteraction('NODE_EXPAND');
-  }
-
-  nodeCollapse(d: NodeModel): void {
-    d.expanded = false;
-    this.graph.collapseNode(d);
-    this.visualization.update({ updateNodes: true, updateRelationships: true });
-    this.graphModelChanged();
   }
 
   onNodeMouseOver(node: NodeModel): void {
@@ -226,10 +219,8 @@ export class GraphEventHandlerModel {
       .on('relMouseOut', this.onItemMouseOut.bind(this))
       .on('relationshipClicked', this.onRelationshipClicked.bind(this))
       .on('canvasClicked', this.onCanvasClicked.bind(this))
-      .on('nodeClose', this.nodeClose.bind(this))
       .on('nodeClicked', this.nodeClicked.bind(this))
-      .on('nodeDblClicked', this.nodeDblClicked.bind(this))
-      .on('nodeUnlock', this.nodeUnlock.bind(this));
+      .on('nodeDblClicked', this.nodeDblClicked.bind(this));
     this.onItemMouseOut();
   }
 }

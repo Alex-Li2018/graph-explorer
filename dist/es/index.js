@@ -4220,24 +4220,24 @@ const getEdgeTerminal = (RelationshipModel, type) => {
 };
 
 // map graph data
-const stringifyValues$1 = (obj) => Object.keys(obj).map((k) => ({
+const stringifyValues = (obj) => Object.keys(obj).map((k) => ({
     [k]: obj[k] === null ? 'null' : optionalToString(obj[k]),
 }));
-const mapProperties$1 = (_) => Object.assign({}, ...stringifyValues$1(_));
+const mapProperties = (_) => Object.assign({}, ...stringifyValues(_));
 function createGraph(nodes, relationships) {
     const graph = new GraphModel();
-    graph.addNodes(mapNodes$1(nodes));
-    graph.addRelationships(mapRelationships$1(relationships, graph));
+    graph.addNodes(mapNodes(nodes));
+    graph.addRelationships(mapRelationships(relationships, graph));
     return graph;
 }
-function mapNodes$1(nodes) {
-    return nodes.map((node) => new NodeModel(node.id, node.labels, mapProperties$1(node.properties), node.propertyTypes));
+function mapNodes(nodes) {
+    return nodes.map((node) => new NodeModel(node.id, node.labels, mapProperties(node.properties), node.propertyTypes));
 }
-function mapRelationships$1(relationships, graph) {
+function mapRelationships(relationships, graph) {
     return relationships.map((rel) => {
         const source = graph.findNode(rel.startNodeId);
         const target = graph.findNode(rel.endNodeId);
-        return new RelationshipModel(rel.id, source, target, rel.type, mapProperties$1(rel.properties), rel.propertyTypes);
+        return new RelationshipModel(rel.id, source, target, rel.type, mapProperties(rel.properties), rel.propertyTypes);
     });
 }
 
@@ -8622,6 +8622,7 @@ function calculateDefaultNodeColors(nodeLabel, config = defaultOptions) {
     };
 }
 
+// 节点 边选择器
 class Selector {
     constructor(tag, classes) {
         this.tag = '';
@@ -8743,6 +8744,7 @@ const DEFAULT_ARRAY_WIDTHS = [
         'shaft-width': '38px',
     },
 ];
+// 默认样式 每个节点不同label不同样式
 const DEFAULT_COLORS = [
     {
         color: '#604A0E',
@@ -8812,14 +8814,30 @@ class GraphStyleModel {
             const tokens = selectorStringToArray(key);
             return new Selector(tokens[0], tokens.slice(1));
         };
+        /**
+         *
+         * @param node 节点
+         * @returns 节点的选择{ tag: node, class: [lables]}
+         */
         this.nodeSelector = function (node = { labels: null }) {
             const classes = node.labels != null ? node.labels : [];
             return new Selector('node', classes);
         };
+        /**
+         * 关系选择其
+         * @param rel 关系
+         * @returns
+         */
         this.relationshipSelector = function (rel = { type: null }) {
             const classes = rel.type != null ? [rel.type] : [];
             return new Selector('relationship', classes);
         };
+        /**
+         * 根据selector寻找对应的规则 没有返回undefined
+         * @param selector
+         * @param rules
+         * @returns
+         */
         this.findRule = function (selector, rules) {
             for (let i = 0; i < rules.length; i++) {
                 const rule = rules[i];
@@ -8829,6 +8847,11 @@ class GraphStyleModel {
             }
             return undefined;
         };
+        /**
+         * 根据规则找到可以使用的颜色
+         * @param rules
+         * @returns
+         */
         this.findAvailableDefaultColor = function (rules) {
             const usedColors = rules
                 .filter((rule) => {
@@ -8842,6 +8865,11 @@ class GraphStyleModel {
             usedColors.length - 1 > DEFAULT_COLORS ? 0 : usedColors.length - 1;
             return DEFAULT_COLORS[index];
         };
+        /**
+         * 设置默认的节点名称
+         * @param item
+         * @returns
+         */
         this.getDefaultNodeCaption = function (item) {
             if (!item ||
                 // @ts-expect-error ts-migrate(2365) FIXME: Operator '>' cannot be applied to types 'boolean' ... Remove this comment to see the full error message
@@ -8875,6 +8903,11 @@ class GraphStyleModel {
         this.calculateStyle = (selector) => {
             return new StyleElement(selector).applyRules(this.rules);
         };
+        /**
+         * 设置节点默认样式
+         * @param selector 选择器
+         * @param item 节点
+         */
         this.setDefaultNodeStyle = (selector, item) => {
             let defaultColor = true;
             let defaultCaption = true;
@@ -8907,6 +8940,12 @@ class GraphStyleModel {
                 this.changeForSelector(minimalSelector, this.getDefaultNodeCaption(item));
             }
         };
+        /**
+         * 根据传入的selector 和 prop样式 为this.rules添加新的规则
+         * @param selector 选择器
+         * @param props 样式
+         * @returns stylerRules新的规则
+         */
         this.changeForSelector = (selector, props) => {
             let rule = this.findRule(selector, this.rules);
             if (rule == null) {
@@ -8916,6 +8955,10 @@ class GraphStyleModel {
             rule.props = Object.assign(Object.assign({}, rule.props), props);
             return rule;
         };
+        /**
+         * 删除对应的规则
+         * @param rule
+         */
         this.destroyRule = (rule) => {
             const idx = this.rules.indexOf(rule);
             if (idx != null) {
@@ -9017,6 +9060,10 @@ class GraphStyleModel {
             });
             return str;
         };
+        /**
+         * 加载样式 可以外部传入
+         * @param data 样式
+         */
         this.loadRules = (data) => {
             const localData = typeof data === 'object' ? data : DEFAULT_STYLE;
             this.rules = [];
@@ -9059,6 +9106,11 @@ class GraphStyleModel {
                 return '';
             });
         };
+        /**
+         * 传入node为节点设置默认样式
+         * @param node 节点
+         * @returns 节点的样式信息
+         */
         this.forNode = (node = {}) => {
             const selector = this.nodeSelector(node);
             if ((node.labels != null ? node.labels.length : 0) > 0) {
@@ -9066,6 +9118,11 @@ class GraphStyleModel {
             }
             return this.calculateStyle(selector);
         };
+        /**
+         *
+         * @param rel
+         * @returns
+         */
         this.forRelationship = (rel) => {
             const selector = this.relationshipSelector(rel);
             return this.calculateStyle(selector);
@@ -10136,10 +10193,10 @@ class ForceSimulation {
 
 const nodeEventHandlers = (selection, trigger) => {
     const onNodeClick = (_event, node) => {
-        trigger('nodeClicked', node);
+        trigger('nodeClicked', node, _event);
     };
     const onNodeDblClick = (_event, node) => {
-        trigger('nodeDblClicked', node);
+        trigger('nodeDblClicked', node, _event);
     };
     const onNodeMouseOver = (_event, node) => {
         if (!node.fx && !node.fy) {
@@ -10147,7 +10204,7 @@ const nodeEventHandlers = (selection, trigger) => {
             node.fx = node.x;
             node.fy = node.y;
         }
-        trigger('nodeMouseOver', node);
+        trigger('nodeMouseOver', node, _event);
     };
     const onNodeMouseOut = (_event, node) => {
         if (node.hoverFixed) {
@@ -10155,7 +10212,7 @@ const nodeEventHandlers = (selection, trigger) => {
             node.fx = null;
             node.fy = null;
         }
-        trigger('nodeMouseOut', node);
+        trigger('nodeMouseOut', node, _event);
     };
     return selection
         .on('mouseover', onNodeMouseOver)
@@ -10383,20 +10440,6 @@ var ZoomType;
     ZoomType["FIT"] = "fit";
 })(ZoomType || (ZoomType = {}));
 
-const mapProperties = (_) => Object.assign({}, ...stringifyValues(_));
-const stringifyValues = (obj) => Object.keys(obj).map((k) => ({
-    [k]: obj[k] === null ? 'null' : optionalToString(obj[k]),
-}));
-function mapNodes(nodes) {
-    return nodes.map((node) => new NodeModel(node.id, node.labels, mapProperties(node.properties), node.propertyTypes));
-}
-function mapRelationships(relationships, graph) {
-    return relationships.map((rel) => {
-        const source = graph.findNode(rel.startNodeId);
-        const target = graph.findNode(rel.endNodeId);
-        return new RelationshipModel(rel.id, source, target, rel.type, mapProperties(rel.properties), rel.propertyTypes);
-    });
-}
 function getGraphStats(graph) {
     const labelStats = {};
     const relTypeStats = {};
@@ -10455,7 +10498,7 @@ class GraphEventHandlerModel {
         this.selectedItem = null;
         this.onItemMouseOver = onItemMouseOver;
         this.onItemSelected = onItemSelected;
-        this.onGraphInteraction = onGraphInteraction !== null && onGraphInteraction !== void 0 ? onGraphInteraction : (() => undefined);
+        this.onGraphInteraction = onGraphInteraction;
         this.onGraphModelChange = onGraphModelChange;
     }
     graphModelChanged() {
@@ -10492,6 +10535,7 @@ class GraphEventHandlerModel {
             },
         });
     }
+    // 隐藏该节点
     nodeClose(d) {
         this.graph.removeConnectedRelationships(d);
         this.graph.removeNode(d);
@@ -10502,7 +10546,22 @@ class GraphEventHandlerModel {
             restartSimulation: true,
         });
         this.graphModelChanged();
-        this.onGraphInteraction('NODE_DISMISSED');
+    }
+    // 不固定节点
+    nodeUnlock(d) {
+        if (!d) {
+            return;
+        }
+        d.fx = null;
+        d.fy = null;
+        this.deselectItem();
+    }
+    // 展开该节点
+    nodeCollapse(d) {
+        d.expanded = false;
+        this.graph.collapseNode(d);
+        this.visualization.update({ updateNodes: true, updateRelationships: true });
+        this.graphModelChanged();
     }
     nodeClicked(node) {
         if (!node) {
@@ -10522,37 +10581,25 @@ class GraphEventHandlerModel {
             this.deselectItem();
         }
     }
-    nodeUnlock(d) {
-        if (!d) {
-            return;
-        }
-        d.fx = null;
-        d.fy = null;
-        this.deselectItem();
-        this.onGraphInteraction('NODE_UNPINNED');
-    }
-    nodeDblClicked(d) {
-        if (d.expanded) {
-            this.nodeCollapse(d);
-            return;
-        }
-        d.expanded = true;
-        const graph = this.graph;
-        const visualization = this.visualization;
-        const graphModelChanged = this.graphModelChanged.bind(this);
-        this.getNodeNeighbours(d, this.graph.findNodeNeighbourIds(d.id), ({ nodes, relationships }) => {
-            graph.addExpandedNodes(d, mapNodes(nodes));
-            graph.addRelationships(mapRelationships(relationships, graph));
-            visualization.update({ updateNodes: true, updateRelationships: true });
-            graphModelChanged();
-        });
-        this.onGraphInteraction('NODE_EXPAND');
-    }
-    nodeCollapse(d) {
-        d.expanded = false;
-        this.graph.collapseNode(d);
-        this.visualization.update({ updateNodes: true, updateRelationships: true });
-        this.graphModelChanged();
+    // 节点双击 触发
+    nodeDblClicked(d, event) {
+        // const graph = this.graph;
+        // const visualization = this.visualization;
+        // const graphModelChanged = this.graphModelChanged.bind(this);
+        // this.getNodeNeighbours(
+        //   d,
+        //   this.graph.findNodeNeighbourIds(d.id),
+        //   ({ nodes, relationships }) => {
+        //     graph.addExpandedNodes(d, mapNodes(nodes));
+        //     graph.addRelationships(mapRelationships(relationships, graph));
+        //     visualization.update({ updateNodes: true, updateRelationships: true });
+        //     graphModelChanged();
+        //   },
+        // );
+        this.onGraphInteraction({
+            type: 'node',
+            item: d,
+        }, event);
     }
     onNodeMouseOver(node) {
         if (!node.contextMenu) {
@@ -10615,10 +10662,8 @@ class GraphEventHandlerModel {
             .on('relMouseOut', this.onItemMouseOut.bind(this))
             .on('relationshipClicked', this.onRelationshipClicked.bind(this))
             .on('canvasClicked', this.onCanvasClicked.bind(this))
-            .on('nodeClose', this.nodeClose.bind(this))
             .on('nodeClicked', this.nodeClicked.bind(this))
-            .on('nodeDblClicked', this.nodeDblClicked.bind(this))
-            .on('nodeUnlock', this.nodeUnlock.bind(this));
+            .on('nodeDblClicked', this.nodeDblClicked.bind(this));
         this.onItemMouseOut();
     }
 }
@@ -11643,6 +11688,8 @@ class GraphVisualization {
             .classed('selected', (relationship) => relationship.selected);
         relationship.forEach((renderer) => relationshipGroups.call(renderer.onGraphChange, this));
     }
+    // public updateNodesStyle(node: NodeModel, style: UpdateStyle) {}
+    // public updateRelationShipsStyle() {}
     render() {
         this.geometry.onTick(this.graph);
         const nodeGroups = this.container

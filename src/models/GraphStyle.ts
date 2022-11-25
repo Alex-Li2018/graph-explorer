@@ -1,6 +1,7 @@
 import { calculateDefaultNodeColors } from '../utils/wordColorCalculator';
 import { selectorArrayToString, selectorStringToArray } from '../utils/utils';
 
+// 节点 边选择器
 export class Selector {
   tag = '';
   classes: string[] = [];
@@ -147,6 +148,7 @@ type DefaultColorType = {
   'border-color': string;
   'text-color-internal': string;
 };
+// 默认样式 每个节点不同label不同样式
 const DEFAULT_COLORS: DefaultColorType[] = [
   {
     color: '#604A0E',
@@ -227,6 +229,11 @@ export class GraphStyleModel {
     return new Selector(tokens[0], tokens.slice(1));
   };
 
+  /**
+   *
+   * @param node 节点
+   * @returns 节点的选择{ tag: node, class: [lables]}
+   */
   nodeSelector = function (
     node: { labels: null | string[] } = { labels: null },
   ): Selector {
@@ -234,6 +241,11 @@ export class GraphStyleModel {
     return new Selector('node', classes);
   };
 
+  /**
+   * 关系选择其
+   * @param rel 关系
+   * @returns
+   */
   relationshipSelector = function (
     rel: { type: null | string } = { type: null },
   ): Selector {
@@ -241,6 +253,12 @@ export class GraphStyleModel {
     return new Selector('relationship', classes);
   };
 
+  /**
+   * 根据selector寻找对应的规则 没有返回undefined
+   * @param selector
+   * @param rules
+   * @returns
+   */
   findRule = function (
     selector: Selector,
     rules: StyleRule[],
@@ -254,6 +272,11 @@ export class GraphStyleModel {
     return undefined;
   };
 
+  /**
+   * 根据规则找到可以使用的颜色
+   * @param rules
+   * @returns
+   */
   findAvailableDefaultColor = function (rules: StyleRule[]): DefaultColorType {
     const usedColors = rules
       .filter((rule: StyleRule) => {
@@ -268,6 +291,11 @@ export class GraphStyleModel {
     return DEFAULT_COLORS[index];
   };
 
+  /**
+   * 设置默认的节点名称
+   * @param item
+   * @returns
+   */
   getDefaultNodeCaption = function (
     item: any,
   ): { caption: string } | { defaultCaption: string } {
@@ -308,6 +336,11 @@ export class GraphStyleModel {
     return new StyleElement(selector).applyRules(this.rules);
   };
 
+  /**
+   * 设置节点默认样式
+   * @param selector 选择器
+   * @param item 节点
+   */
   setDefaultNodeStyle = (selector: Selector, item: any): void => {
     let defaultColor = true;
     let defaultCaption = true;
@@ -350,6 +383,12 @@ export class GraphStyleModel {
     }
   };
 
+  /**
+   * 根据传入的selector 和 prop样式 为this.rules添加新的规则
+   * @param selector 选择器
+   * @param props 样式
+   * @returns stylerRules新的规则
+   */
   changeForSelector = (selector: Selector, props: any): StyleRule => {
     let rule = this.findRule(selector, this.rules);
     if (rule == null) {
@@ -360,6 +399,10 @@ export class GraphStyleModel {
     return rule;
   };
 
+  /**
+   * 删除对应的规则
+   * @param rule
+   */
   destroyRule = (rule: StyleRule): void => {
     const idx = this.rules.indexOf(rule);
     if (idx != null) {
@@ -463,6 +506,10 @@ export class GraphStyleModel {
     return str;
   };
 
+  /**
+   * 加载样式 可以外部传入
+   * @param data 样式
+   */
   loadRules = (data?: any): void => {
     const localData = typeof data === 'object' ? data : DEFAULT_STYLE;
     this.rules = [];
@@ -510,6 +557,11 @@ export class GraphStyleModel {
     });
   };
 
+  /**
+   * 传入node为节点设置默认样式
+   * @param node 节点
+   * @returns 节点的样式信息
+   */
   forNode = (node: any = {}): StyleElement => {
     const selector = this.nodeSelector(node);
     if ((node.labels != null ? node.labels.length : 0) > 0) {
@@ -518,6 +570,11 @@ export class GraphStyleModel {
     return this.calculateStyle(selector);
   };
 
+  /**
+   *
+   * @param rel
+   * @returns
+   */
   forRelationship = (rel: any): StyleElement => {
     const selector = this.relationshipSelector(rel);
     return this.calculateStyle(selector);

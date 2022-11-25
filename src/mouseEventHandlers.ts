@@ -12,14 +12,14 @@ import { RelationshipModel } from './models/Relationship';
 
 export const nodeEventHandlers = (
   selection: Selection<SVGGElement, NodeModel, BaseType, unknown>,
-  trigger: (event: string, node: NodeModel) => void,
+  trigger: (event: string, node: NodeModel, _event: Event) => void,
 ) => {
   const onNodeClick = (_event: Event, node: NodeModel) => {
-    trigger('nodeClicked', node);
+    trigger('nodeClicked', node, _event);
   };
 
   const onNodeDblClick = (_event: Event, node: NodeModel) => {
-    trigger('nodeDblClicked', node);
+    trigger('nodeDblClicked', node, _event);
   };
 
   const onNodeMouseOver = (_event: Event, node: NodeModel) => {
@@ -29,7 +29,7 @@ export const nodeEventHandlers = (
       node.fy = node.y;
     }
 
-    trigger('nodeMouseOver', node);
+    trigger('nodeMouseOver', node, _event);
   };
 
   const onNodeMouseOut = (_event: Event, node: NodeModel) => {
@@ -39,7 +39,7 @@ export const nodeEventHandlers = (
       node.fy = null;
     }
 
-    trigger('nodeMouseOut', node);
+    trigger('nodeMouseOut', node, _event);
   };
 
   return selection

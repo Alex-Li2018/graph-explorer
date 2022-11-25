@@ -37,15 +37,16 @@ import {
   VizItem,
   LayoutType,
 } from './types';
-import {
-  GraphEventHandlerModel,
-  GraphInteraction,
-} from './GraphEventHandlerModel';
+import { GraphEventHandlerModel } from './GraphEventHandlerModel';
 import { GraphStats } from './utils/mapper';
 import { CircularLayout } from './layout/CircularLayout';
 import { GridLayout } from './layout/GridLayout';
 import { svgToImageDownload, DownloadImageOptions } from './imageDownload';
 
+// type UpdateStyle = {
+//   color: string;
+//   diameter: number;
+// };
 type MeasureSizeFn = () => { width: number; height: number };
 type ZoomEvent = (limitsReached: ZoomLimitsReached) => void;
 type VoidEvent = () => void;
@@ -316,6 +317,10 @@ export default class GraphVisualization {
     );
   }
 
+  // public updateNodesStyle(node: NodeModel, style: UpdateStyle) {}
+
+  // public updateRelationShipsStyle() {}
+
   private render() {
     this.geometry.onTick(this.graph);
 
@@ -462,7 +467,7 @@ export default class GraphVisualization {
     onItemMouseOver: (item: VizItem) => void,
     onItemSelect: (item: VizItem) => void,
     onGraphModelChange: (stats: GraphStats) => void,
-    onGraphInteraction: (event: GraphInteraction) => void,
+    onGraphInteraction: (item: VizItem, event: Event) => void,
   ) {
     const graphEventHandler = new GraphEventHandlerModel(
       this.graph,

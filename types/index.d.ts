@@ -287,34 +287,89 @@ declare class GraphStyleModel {
     rules: StyleRule[];
     constructor(useGeneratedDefaultColors?: boolean);
     parseSelector: (key: string) => Selector;
+    /**
+     *
+     * @param node 节点
+     * @returns 节点的选择{ tag: node, class: [lables]}
+     */
     nodeSelector: (node?: {
         labels: null | string[];
     }) => Selector;
+    /**
+     * 关系选择其
+     * @param rel 关系
+     * @returns
+     */
     relationshipSelector: (rel?: {
         type: null | string;
     }) => Selector;
+    /**
+     * 根据selector寻找对应的规则 没有返回undefined
+     * @param selector
+     * @param rules
+     * @returns
+     */
     findRule: (selector: Selector, rules: StyleRule[]) => StyleRule | undefined;
+    /**
+     * 根据规则找到可以使用的颜色
+     * @param rules
+     * @returns
+     */
     findAvailableDefaultColor: (rules: StyleRule[]) => DefaultColorType;
+    /**
+     * 设置默认的节点名称
+     * @param item
+     * @returns
+     */
     getDefaultNodeCaption: (item: any) => {
         caption: string;
     } | {
         defaultCaption: string;
     };
     calculateStyle: (selector: Selector) => StyleElement;
+    /**
+     * 设置节点默认样式
+     * @param selector 选择器
+     * @param item 节点
+     */
     setDefaultNodeStyle: (selector: Selector, item: any) => void;
+    /**
+     * 根据传入的selector 和 prop样式 为this.rules添加新的规则
+     * @param selector 选择器
+     * @param props 样式
+     * @returns stylerRules新的规则
+     */
     changeForSelector: (selector: Selector, props: any) => StyleRule;
+    /**
+     * 删除对应的规则
+     * @param rule
+     */
     destroyRule: (rule: StyleRule) => void;
     importGrass: (string: string) => void;
     parse: (string: string) => any;
     resetToDefault: () => void;
     toSheet: () => any;
     toString: () => string;
+    /**
+     * 加载样式 可以外部传入
+     * @param data 样式
+     */
     loadRules: (data?: any) => void;
     defaultSizes: () => DefaultSizeType[];
     defaultArrayWidths: () => DefaultArrayWidthType[];
     defaultColors: () => DefaultColorType[];
     interpolate: (str: any, item: any) => any;
+    /**
+     * 传入node为节点设置默认样式
+     * @param node 节点
+     * @returns 节点的样式信息
+     */
     forNode: (node?: any) => StyleElement;
+    /**
+     *
+     * @param rel
+     * @returns
+     */
     forRelationship: (rel: any) => StyleElement;
 }
 
@@ -342,8 +397,6 @@ declare type GraphStats = {
     relTypes?: GraphStatsRelationshipTypes;
 };
 
-declare type GraphInteraction = 'NODE_EXPAND' | 'NODE_UNPINNED' | 'NODE_DISMISSED';
-declare type GraphInteractionCallBack = (event: GraphInteraction, properties?: Record<string, unknown>) => void;
 declare class GraphEventHandlerModel {
     getNodeNeighbours: GetNodeNeighboursFn;
     graph: GraphModel;
@@ -351,17 +404,17 @@ declare class GraphEventHandlerModel {
     onGraphModelChange: (stats: GraphStats) => void;
     onItemMouseOver: (item: VizItem) => void;
     onItemSelected: (item: VizItem) => void;
-    onGraphInteraction: GraphInteractionCallBack;
+    onGraphInteraction: (item: VizItem, event: Event) => void;
     selectedItem: NodeModel | RelationshipModel | null;
-    constructor(graph: GraphModel, visualization: GraphVisualization, getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem) => void, onItemSelected: (item: VizItem) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction?: (event: GraphInteraction) => void);
+    constructor(graph: GraphModel, visualization: GraphVisualization, getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem) => void, onItemSelected: (item: VizItem) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction: (item: VizItem, event: Event) => void);
     graphModelChanged(): void;
     selectItem(item: NodeModel | RelationshipModel): void;
     deselectItem(): void;
     nodeClose(d: NodeModel): void;
-    nodeClicked(node: NodeModel): void;
     nodeUnlock(d: NodeModel): void;
-    nodeDblClicked(d: NodeModel): void;
     nodeCollapse(d: NodeModel): void;
+    nodeClicked(node: NodeModel): void;
+    nodeDblClicked(d: NodeModel, event: Event): void;
     onNodeMouseOver(node: NodeModel): void;
     onMenuMouseOver(itemWithMenu: NodeModel): void;
     onRelationshipMouseOver(relationship: RelationshipModel): void;
@@ -593,7 +646,7 @@ declare class GraphVisualization {
     precomputeAndStart(): void;
     resize(isFullscreen: boolean, wheelZoomRequiresModKey: boolean | undefined): void;
     boundingBox(): DOMRect | undefined;
-    initEventHandler(getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem) => void, onItemSelect: (item: VizItem) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction: (event: GraphInteraction) => void): GraphEventHandlerModel;
+    initEventHandler(getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem) => void, onItemSelect: (item: VizItem) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction: (item: VizItem, event: Event) => void): GraphEventHandlerModel;
     on: (event: string, callback: (...args: any[]) => void) => this;
     trigger: (event: string, ...args: any[]) => void;
     cricularLayoutHandler(): void;

@@ -3,7 +3,7 @@ import { GraphModel } from './models/Graph';
 import { GraphStyleModel } from './models/GraphStyle';
 import { ForceSimulation } from './layout/force/ForceSimulation';
 import { ZoomLimitsReached, ZoomType, GetNodeNeighboursFn, VizItem, LayoutType } from './types';
-import { GraphEventHandlerModel, GraphInteraction } from './GraphEventHandlerModel';
+import { GraphEventHandlerModel } from './GraphEventHandlerModel';
 import { GraphStats } from './utils/mapper';
 import { CircularLayout } from './layout/CircularLayout';
 import { GridLayout } from './layout/GridLayout';
@@ -60,7 +60,7 @@ export default class GraphVisualization {
     precomputeAndStart(): void;
     resize(isFullscreen: boolean, wheelZoomRequiresModKey: boolean | undefined): void;
     boundingBox(): DOMRect | undefined;
-    initEventHandler(getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem) => void, onItemSelect: (item: VizItem) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction: (event: GraphInteraction) => void): GraphEventHandlerModel;
+    initEventHandler(getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem) => void, onItemSelect: (item: VizItem) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction: (item: VizItem, event: Event) => void): GraphEventHandlerModel;
     on: (event: string, callback: (...args: any[]) => void) => this;
     trigger: (event: string, ...args: any[]) => void;
     cricularLayoutHandler(): void;
