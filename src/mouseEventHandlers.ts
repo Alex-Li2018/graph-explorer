@@ -131,19 +131,19 @@ export const nodeDragEventHandlers = (
 
 export const relationshipEventHandlers = (
   selection: Selection<SVGGElement, RelationshipModel, BaseType, unknown>,
-  trigger: (event: string, rel: RelationshipModel) => void,
+  trigger: (event: string, rel: RelationshipModel, _event: Event) => void,
 ) => {
   const onRelationshipClick = (event: Event, rel: RelationshipModel) => {
     event.stopPropagation();
-    trigger('relationshipClicked', rel);
+    trigger('relationshipClicked', rel, event);
   };
 
   const onRelMouseOver = (_event: Event, rel: RelationshipModel) => {
-    trigger('relMouseOver', rel);
+    trigger('relMouseOver', rel, _event);
   };
 
   const onRelMouseOut = (_event: Event, rel: RelationshipModel) => {
-    trigger('relMouseOut', rel);
+    trigger('relMouseOut', rel, _event);
   };
 
   return selection

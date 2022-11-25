@@ -60,7 +60,7 @@ export default class GraphVisualization {
     precomputeAndStart(): void;
     resize(isFullscreen: boolean, wheelZoomRequiresModKey: boolean | undefined): void;
     boundingBox(): DOMRect | undefined;
-    initEventHandler(getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem) => void, onItemSelect: (item: VizItem) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction: (item: VizItem, event: Event) => void): GraphEventHandlerModel;
+    initEventHandler(getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem, event?: Event) => void, onItemSelect: (item: VizItem, event?: Event) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction: (item: VizItem, event: Event) => void): GraphEventHandlerModel;
     on: (event: string, callback: (...args: any[]) => void) => this;
     trigger: (event: string, ...args: any[]) => void;
     cricularLayoutHandler(): void;

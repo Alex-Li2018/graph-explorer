@@ -464,8 +464,8 @@ export default class GraphVisualization {
   // init graph bind event
   initEventHandler(
     getNodeNeighbours: GetNodeNeighboursFn,
-    onItemMouseOver: (item: VizItem) => void,
-    onItemSelect: (item: VizItem) => void,
+    onItemMouseOver: (item: VizItem, event?: Event) => void,
+    onItemSelect: (item: VizItem, event?: Event) => void,
     onGraphModelChange: (stats: GraphStats) => void,
     onGraphInteraction: (item: VizItem, event: Event) => void,
   ) {

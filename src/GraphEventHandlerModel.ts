@@ -15,8 +15,8 @@ export class GraphEventHandlerModel {
   graph: GraphModel;
   visualization: GraphVisualization;
   onGraphModelChange: (stats: GraphStats) => void;
-  onItemMouseOver: (item: VizItem) => void;
-  onItemSelected: (item: VizItem) => void;
+  onItemMouseOver: (item: VizItem, event?: Event) => void;
+  onItemSelected: (item: VizItem, event?: Event) => void;
   onGraphInteraction: (item: VizItem, event: Event) => void;
   selectedItem: NodeModel | RelationshipModel | null;
 
@@ -24,8 +24,8 @@ export class GraphEventHandlerModel {
     graph: GraphModel,
     visualization: GraphVisualization,
     getNodeNeighbours: GetNodeNeighboursFn,
-    onItemMouseOver: (item: VizItem) => void,
-    onItemSelected: (item: VizItem) => void,
+    onItemMouseOver: (item: VizItem, event?: Event) => void,
+    onItemSelected: (item: VizItem, event?: Event) => void,
     onGraphModelChange: (stats: GraphStats) => void,
     onGraphInteraction: (item: VizItem, event: Event) => void,
   ) {
@@ -59,7 +59,7 @@ export class GraphEventHandlerModel {
     });
   }
 
-  deselectItem(): void {
+  deselectItem(event?: Event): void {
     if (this.selectedItem) {
       this.selectedItem.selected = false;
 
@@ -71,47 +71,19 @@ export class GraphEventHandlerModel {
 
       this.selectedItem = null;
     }
-    this.onItemSelected({
-      type: 'canvas',
-      item: {
-        nodeCount: this.graph.nodes().length,
-        relationshipCount: this.graph.relationships().length,
+    this.onItemSelected(
+      {
+        type: 'canvas',
+        item: {
+          nodeCount: this.graph.nodes().length,
+          relationshipCount: this.graph.relationships().length,
+        },
       },
-    });
+      event,
+    );
   }
 
-  // 隐藏该节点
-  nodeClose(d: NodeModel): void {
-    this.graph.removeConnectedRelationships(d);
-    this.graph.removeNode(d);
-    this.deselectItem();
-    this.visualization.update({
-      updateNodes: true,
-      updateRelationships: true,
-      restartSimulation: true,
-    });
-    this.graphModelChanged();
-  }
-
-  // 不固定节点
-  nodeUnlock(d: NodeModel): void {
-    if (!d) {
-      return;
-    }
-    d.fx = null;
-    d.fy = null;
-    this.deselectItem();
-  }
-
-  // 展开该节点
-  nodeCollapse(d: NodeModel): void {
-    d.expanded = false;
-    this.graph.collapseNode(d);
-    this.visualization.update({ updateNodes: true, updateRelationships: true });
-    this.graphModelChanged();
-  }
-
-  nodeClicked(node: NodeModel): void {
+  nodeClicked(node: NodeModel, event: Event): void {
     if (!node) {
       return;
     }
@@ -120,12 +92,15 @@ export class GraphEventHandlerModel {
     node.fy = node.y;
     if (!node.selected) {
       this.selectItem(node);
-      this.onItemSelected({
-        type: 'node',
-        item: node,
-      });
+      this.onItemSelected(
+        {
+          type: 'node',
+          item: node,
+        },
+        event,
+      );
     } else {
-      this.deselectItem();
+      this.deselectItem(event);
     }
   }
 
@@ -153,45 +128,57 @@ export class GraphEventHandlerModel {
     );
   }
 
-  onNodeMouseOver(node: NodeModel): void {
+  onNodeMouseOver(node: NodeModel, event: Event): void {
     if (!node.contextMenu) {
-      this.onItemMouseOver({
-        type: 'node',
-        item: node,
-      });
+      this.onItemMouseOver(
+        {
+          type: 'node',
+          item: node,
+        },
+        event,
+      );
     }
   }
 
-  onMenuMouseOver(itemWithMenu: NodeModel): void {
+  onMenuMouseOver(itemWithMenu: NodeModel, event: Event): void {
     if (!itemWithMenu.contextMenu) {
       throw new Error('menuMouseOver triggered without menu');
     }
-    this.onItemMouseOver({
-      type: 'context-menu-item',
-      item: {
-        label: itemWithMenu.contextMenu.label,
-        content: itemWithMenu.contextMenu.menuContent,
-        selection: itemWithMenu.contextMenu.menuSelection,
+    this.onItemMouseOver(
+      {
+        type: 'context-menu-item',
+        item: {
+          label: itemWithMenu.contextMenu.label,
+          content: itemWithMenu.contextMenu.menuContent,
+          selection: itemWithMenu.contextMenu.menuSelection,
+        },
       },
-    });
+      event,
+    );
   }
 
-  onRelationshipMouseOver(relationship: RelationshipModel): void {
-    this.onItemMouseOver({
-      type: 'relationship',
-      item: relationship,
-    });
-  }
-
-  onRelationshipClicked(relationship: RelationshipModel): void {
-    if (!relationship.selected) {
-      this.selectItem(relationship);
-      this.onItemSelected({
+  onRelationshipMouseOver(relationship: RelationshipModel, event: Event): void {
+    this.onItemMouseOver(
+      {
         type: 'relationship',
         item: relationship,
-      });
+      },
+      event,
+    );
+  }
+
+  onRelationshipClicked(relationship: RelationshipModel, event: Event): void {
+    if (!relationship.selected) {
+      this.selectItem(relationship);
+      this.onItemSelected(
+        {
+          type: 'relationship',
+          item: relationship,
+        },
+        event,
+      );
     } else {
-      this.deselectItem();
+      this.deselectItem(event);
     }
   }
 
