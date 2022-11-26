@@ -1,6 +1,6 @@
 import { BaseType, Selection } from 'd3-selection';
 
-import GraphVisualization from './index';
+import GraphVisualization from './GraphVisualization';
 
 const noOp = () => undefined;
 type RendererEventHandler<Datum> = (

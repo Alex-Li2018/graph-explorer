@@ -3,7 +3,7 @@ import { arc as d3Arc } from 'd3-shape';
 
 import { NodeModel } from '../../models/Node';
 import Renderer from '../../Renderer';
-import GraphVisualization from '../../index';
+import GraphVisualization from '../../GraphVisualization';
 import icons from './d3Icons';
 
 const noOp = () => undefined;

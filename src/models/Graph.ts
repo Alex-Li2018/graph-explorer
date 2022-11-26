@@ -1,15 +1,9 @@
 import { NodeModel } from './Node';
 import { RelationshipModel } from './Relationship';
 
-type NodeMap = Record<string, string[]>;
-function uniq<T>(list: T[]): T[] {
-  return [...new Set(list)];
-}
-
 export class GraphModel {
   _nodes: NodeModel[];
   _relationships: RelationshipModel[];
-  expandedNodeMap: NodeMap;
   nodeMap: Record<string, NodeModel>;
   relationshipMap: Record<string, RelationshipModel>;
 
@@ -28,7 +22,6 @@ export class GraphModel {
     this.findRelationship = this.findRelationship.bind(this);
     this.findAllRelationshipToNode = this.findAllRelationshipToNode.bind(this);
     this.nodeMap = {};
-    this.expandedNodeMap = {};
     this._nodes = [];
     this.relationshipMap = {};
     this._relationships = [];
@@ -69,37 +62,12 @@ export class GraphModel {
     }
   }
 
-  addExpandedNodes = (node: NodeModel, nodes: NodeModel[]): void => {
-    for (const eNode of Array.from(nodes)) {
-      if (this.findNode(eNode.id) == null) {
-        this.nodeMap[eNode.id] = eNode;
-        this._nodes.push(eNode);
-        this.expandedNodeMap[node.id] = this.expandedNodeMap[node.id]
-          ? uniq(this.expandedNodeMap[node.id].concat([eNode.id]))
-          : [eNode.id];
-      }
-    }
-  };
-
   removeNode(node: NodeModel): void {
     if (this.findNode(node.id) != null) {
       delete this.nodeMap[node.id];
       this._nodes.splice(this._nodes.indexOf(node), 1);
     }
   }
-
-  collapseNode = (node: NodeModel): void => {
-    if (!this.expandedNodeMap[node.id]) {
-      return;
-    }
-    this.expandedNodeMap[node.id].forEach((id) => {
-      const eNode = this.nodeMap[id];
-      this.collapseNode(eNode);
-      this.removeConnectedRelationships(eNode);
-      this.removeNode(eNode);
-    });
-    this.expandedNodeMap[node.id] = [];
-  };
 
   updateNode(node: NodeModel): void {
     if (this.findNode(node.id) != null) {
