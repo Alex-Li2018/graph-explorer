@@ -181,6 +181,14 @@ export class GraphModel {
     );
   }
 
+  getSelectedNode() {
+    return this._nodes.filter((item) => item.selected);
+  }
+
+  getSelectedRelationship() {
+    return this._relationships.filter((item) => item.selected);
+  }
+
   resetGraph(): void {
     this.nodeMap = {};
     this._nodes = [];
