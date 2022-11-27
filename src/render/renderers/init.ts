@@ -8,6 +8,7 @@ const noop = () => undefined;
 
 const nodeRingStrokeSize = 8;
 
+// 节点
 const nodeOutline = new Renderer<NodeModel>({
   name: 'nodeOutline',
   onGraphChange(selection, viz) {
@@ -34,6 +35,7 @@ const nodeOutline = new Renderer<NodeModel>({
   onTick: noop,
 });
 
+// 节点名称
 const nodeCaption = new Renderer<NodeModel>({
   name: 'nodeCaption',
   onGraphChange(selection, viz) {
@@ -61,6 +63,7 @@ const nodeCaption = new Renderer<NodeModel>({
   onTick: noop,
 });
 
+// 节点环 轮廓
 const nodeRing = new Renderer<NodeModel>({
   name: 'nodeRing',
   onGraphChange(selection) {

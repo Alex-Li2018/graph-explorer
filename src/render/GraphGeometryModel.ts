@@ -32,6 +32,7 @@ export class GraphGeometryModel {
 
   formatRelationshipCaptions(relationships: RelationshipModel[]): void {
     relationships.forEach((relationship) => {
+      // 会设置当前边的样式
       const template = this.style.forRelationship(relationship).get('caption');
       relationship.caption = this.style.interpolate(template, relationship);
     });
@@ -39,6 +40,7 @@ export class GraphGeometryModel {
 
   setNodeRadii(nodes: NodeModel[]): void {
     nodes.forEach((node) => {
+      // 会设置当前节点的样式
       node.radius = parseFloat(this.style.forNode(node).get('diameter')) / 2;
     });
   }

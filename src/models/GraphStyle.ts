@@ -558,7 +558,7 @@ export class GraphStyleModel {
   };
 
   /**
-   * 传入node为节点设置默认样式
+   * 传入node为节点 返回对应的样式
    * @param node 节点
    * @returns 节点的样式信息
    */
@@ -571,7 +571,7 @@ export class GraphStyleModel {
   };
 
   /**
-   *
+   * 传入节点 返回对应的样式
    * @param rel
    * @returns
    */
