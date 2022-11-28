@@ -1,5 +1,5 @@
 import { BaseType, Selection } from 'd3-selection';
-import GraphVisualization from './index';
+import GraphVisualization from './GraphVisualization';
 declare type RendererEventHandler<Datum> = (selection: Selection<SVGGElement, Datum, BaseType, unknown>, style: GraphVisualization) => void;
 export default class Renderer<Datum> {
     onGraphChange: RendererEventHandler<Datum>;

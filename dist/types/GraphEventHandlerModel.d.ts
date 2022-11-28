@@ -3,7 +3,7 @@ import { NodeModel } from './models/Node';
 import { RelationshipModel } from './models/Relationship';
 import { GetNodeNeighboursFn, VizItem } from './types';
 import { GraphStats } from './utils/mapper';
-import GraphVisualization from './index';
+import GraphVisualization from './GraphVisualization';
 export declare type GraphInteraction = 'NODE_EXPAND' | 'NODE_UNPINNED' | 'NODE_DISMISSED';
 export declare class GraphEventHandlerModel {
     getNodeNeighbours: GetNodeNeighboursFn;

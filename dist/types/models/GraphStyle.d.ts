@@ -78,6 +78,11 @@ export declare class GraphStyleModel {
     } | {
         defaultCaption: string;
     };
+    /**
+     * 计算对应的样式
+     * @param selector 选择器
+     * @returns
+     */
     calculateStyle: (selector: Selector) => StyleElement;
     /**
      * 设置节点默认样式
@@ -112,13 +117,13 @@ export declare class GraphStyleModel {
     defaultColors: () => DefaultColorType[];
     interpolate: (str: any, item: any) => any;
     /**
-     * 传入node为节点设置默认样式
+     * 传入node为节点 返回对应的样式
      * @param node 节点
      * @returns 节点的样式信息
      */
     forNode: (node?: any) => StyleElement;
     /**
-     *
+     * 传入节点 返回对应的样式
      * @param rel
      * @returns
      */

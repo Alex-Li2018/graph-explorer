@@ -78,6 +78,21 @@ class StyleRule {
 
 // 默认样式
 const DEFAULT_STYLE = {
+  'node.1times': {
+    diameter: '50px',
+  },
+  'node.125times': {
+    diameter: '62px',
+  },
+  'node.15times': {
+    diameter: '75px',
+  },
+  'node.175times': {
+    diameter: '88px',
+  },
+  'node.2times': {
+    diameter: '100px',
+  },
   node: {
     diameter: '50px',
     color: '#A5ABB6',
@@ -100,19 +115,19 @@ const DEFAULT_STYLE = {
 type DefaultSizeType = { diameter: string };
 const DEFAULT_SIZES: DefaultSizeType[] = [
   {
-    diameter: '10px',
-  },
-  {
-    diameter: '20px',
-  },
-  {
     diameter: '50px',
   },
   {
-    diameter: '65px',
+    diameter: '62px',
   },
   {
-    diameter: '80px',
+    diameter: '75px',
+  },
+  {
+    diameter: '88px',
+  },
+  {
+    diameter: '100px',
   },
 ];
 type DefaultArrayWidthType = { 'shaft-width': string };
@@ -332,6 +347,11 @@ export class GraphStyleModel {
     };
   };
 
+  /**
+   * 计算对应的样式
+   * @param selector 选择器
+   * @returns
+   */
   calculateStyle = (selector: Selector): StyleElement => {
     return new StyleElement(selector).applyRules(this.rules);
   };

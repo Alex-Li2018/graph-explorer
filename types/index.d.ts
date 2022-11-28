@@ -66,11 +66,9 @@ declare class RelationshipModel {
     isLoop(): boolean;
 }
 
-declare type NodeMap = Record<string, string[]>;
 declare class GraphModel {
     _nodes: NodeModel[];
     _relationships: RelationshipModel[];
-    expandedNodeMap: NodeMap;
     nodeMap: Record<string, NodeModel>;
     relationshipMap: Record<string, RelationshipModel>;
     constructor();
@@ -78,9 +76,7 @@ declare class GraphModel {
     relationships(): RelationshipModel[];
     groupedRelationships(): NodePair[];
     addNodes(nodes: NodeModel[]): void;
-    addExpandedNodes: (node: NodeModel, nodes: NodeModel[]) => void;
     removeNode(node: NodeModel): void;
-    collapseNode: (node: NodeModel) => void;
     updateNode(node: NodeModel): void;
     removeConnectedRelationships(node: NodeModel): void;
     addRelationships(relationships: RelationshipModel[]): void;
@@ -90,6 +86,8 @@ declare class GraphModel {
     findNodeNeighbourIds(id: string): string[];
     findRelationship(id: string): RelationshipModel | undefined;
     findAllRelationshipToNode(node: NodeModel): RelationshipModel[];
+    getSelectedNode(): NodeModel[];
+    getSelectedRelationship(): RelationshipModel[];
     resetGraph(): void;
 }
 declare class NodePair {
@@ -326,6 +324,11 @@ declare class GraphStyleModel {
     } | {
         defaultCaption: string;
     };
+    /**
+     * 计算对应的样式
+     * @param selector 选择器
+     * @returns
+     */
     calculateStyle: (selector: Selector) => StyleElement;
     /**
      * 设置节点默认样式
@@ -360,13 +363,13 @@ declare class GraphStyleModel {
     defaultColors: () => DefaultColorType[];
     interpolate: (str: any, item: any) => any;
     /**
-     * 传入node为节点设置默认样式
+     * 传入node为节点 返回对应的样式
      * @param node 节点
      * @returns 节点的样式信息
      */
     forNode: (node?: any) => StyleElement;
     /**
-     *
+     * 传入节点 返回对应的样式
      * @param rel
      * @returns
      */
@@ -384,6 +387,8 @@ declare class ForceSimulation {
     stop(): void;
 }
 
+declare function mapNodes(nodes: BasicNode[]): NodeModel[];
+declare function mapRelationships(relationships: BasicRelationship[], graph: GraphModel): RelationshipModel[];
 declare type GraphStatsLabels = Record<string, {
     count: number;
     properties: Record<string, string>;
@@ -653,4 +658,4 @@ declare class GraphVisualization {
     destroy(): void;
 }
 
-export { GraphVisualization as default };
+export { NodeModel, RelationshipModel, GraphVisualization as default, mapNodes, mapRelationships };

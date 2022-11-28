@@ -20,6 +20,8 @@
     <bUtton id="ring">环形</bUtton>
     <bUtton id="grid">网格</bUtton>
     <bUtton id="download">下载</bUtton>
+    <button id="color">改变选中的颜色</button>
+    <button id="size">改变选中的尺寸</button>
     <div class="graph-data_wrap">
         <svg id="graph_wrap"></svg>
     </div>
@@ -194,6 +196,16 @@
 
         document.getElementById('download').onclick = function() {
             instance && instance.downloadImage(dom, '可视化')
+        }
+    </script>
+
+    <script>
+        document.getElementById('color').onclick = function() {
+            console.log(instance.graph)
+            instance.updateNodesStyle(instance.graph.getSelectedNode(), {color: 'red'})
+        }
+        document.getElementById('size').onclick = function() {
+
         }
     </script>
 </body>

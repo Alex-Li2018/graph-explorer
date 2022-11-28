@@ -45,7 +45,7 @@ import { svgToImageDownload, DownloadImageOptions } from './imageDownload';
 
 // type UpdateStyle = {
 //   color: string;
-//   diameter: number;
+//   size: string;
 // };
 type MeasureSizeFn = () => { width: number; height: number };
 type ZoomEvent = (limitsReached: ZoomLimitsReached) => void;
@@ -320,7 +320,11 @@ export default class GraphVisualization {
     );
   }
 
-  // public updateNodesStyle(node: NodeModel, style: UpdateStyle) {}
+  // public updateNodesStyle(id: string, style: UpdateStyle) {
+  // const { color, size } = style;
+  // const node = this.graph.findNode(id);
+  // this.style.changeForSelector(node)
+  // }
 
   // public updateRelationShipsStyle() {}
 

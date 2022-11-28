@@ -3871,34 +3871,8 @@ const ZOOM_MIN_SCALE = 0.1;
 const ZOOM_MAX_SCALE = 2;
 const ZOOM_FIT_PADDING_PERCENT = 0.05;
 
-function uniq(list) {
-    return [...new Set(list)];
-}
 class GraphModel {
     constructor() {
-        this.addExpandedNodes = (node, nodes) => {
-            for (const eNode of Array.from(nodes)) {
-                if (this.findNode(eNode.id) == null) {
-                    this.nodeMap[eNode.id] = eNode;
-                    this._nodes.push(eNode);
-                    this.expandedNodeMap[node.id] = this.expandedNodeMap[node.id]
-                        ? uniq(this.expandedNodeMap[node.id].concat([eNode.id]))
-                        : [eNode.id];
-                }
-            }
-        };
-        this.collapseNode = (node) => {
-            if (!this.expandedNodeMap[node.id]) {
-                return;
-            }
-            this.expandedNodeMap[node.id].forEach((id) => {
-                const eNode = this.nodeMap[id];
-                this.collapseNode(eNode);
-                this.removeConnectedRelationships(eNode);
-                this.removeNode(eNode);
-            });
-            this.expandedNodeMap[node.id] = [];
-        };
         this.addNodes = this.addNodes.bind(this);
         this.removeNode = this.removeNode.bind(this);
         this.updateNode = this.updateNode.bind(this);
@@ -3913,7 +3887,6 @@ class GraphModel {
         this.findRelationship = this.findRelationship.bind(this);
         this.findAllRelationshipToNode = this.findAllRelationshipToNode.bind(this);
         this.nodeMap = {};
-        this.expandedNodeMap = {};
         this._nodes = [];
         this.relationshipMap = {};
         this._relationships = [];
@@ -4014,6 +3987,12 @@ class GraphModel {
     findAllRelationshipToNode(node) {
         return this._relationships.filter((relationship) => relationship.source.id === node.id ||
             relationship.target.id === node.id);
+    }
+    getSelectedNode() {
+        return this._nodes.filter((item) => item.selected);
+    }
+    getSelectedRelationship() {
+        return this._relationships.filter((item) => item.selected);
     }
     resetGraph() {
         this.nodeMap = {};
@@ -4220,24 +4199,24 @@ const getEdgeTerminal = (RelationshipModel, type) => {
 };
 
 // map graph data
-const stringifyValues = (obj) => Object.keys(obj).map((k) => ({
+const stringifyValues$1 = (obj) => Object.keys(obj).map((k) => ({
     [k]: obj[k] === null ? 'null' : optionalToString(obj[k]),
 }));
-const mapProperties = (_) => Object.assign({}, ...stringifyValues(_));
+const mapProperties$1 = (_) => Object.assign({}, ...stringifyValues$1(_));
 function createGraph(nodes, relationships) {
     const graph = new GraphModel();
-    graph.addNodes(mapNodes(nodes));
-    graph.addRelationships(mapRelationships(relationships, graph));
+    graph.addNodes(mapNodes$1(nodes));
+    graph.addRelationships(mapRelationships$1(relationships, graph));
     return graph;
 }
-function mapNodes(nodes) {
-    return nodes.map((node) => new NodeModel(node.id, node.labels, mapProperties(node.properties), node.propertyTypes));
+function mapNodes$1(nodes) {
+    return nodes.map((node) => new NodeModel(node.id, node.labels, mapProperties$1(node.properties), node.propertyTypes));
 }
-function mapRelationships(relationships, graph) {
+function mapRelationships$1(relationships, graph) {
     return relationships.map((rel) => {
         const source = graph.findNode(rel.startNodeId);
         const target = graph.findNode(rel.endNodeId);
-        return new RelationshipModel(rel.id, source, target, rel.type, mapProperties(rel.properties), rel.propertyTypes);
+        return new RelationshipModel(rel.id, source, target, rel.type, mapProperties$1(rel.properties), rel.propertyTypes);
     });
 }
 
@@ -4864,12 +4843,14 @@ class GraphGeometryModel {
     }
     formatRelationshipCaptions(relationships) {
         relationships.forEach((relationship) => {
+            // 会设置当前边的样式
             const template = this.style.forRelationship(relationship).get('caption');
             relationship.caption = this.style.interpolate(template, relationship);
         });
     }
     setNodeRadii(nodes) {
         nodes.forEach((node) => {
+            // 会设置当前节点的样式
             node.radius = parseFloat(this.style.forNode(node).get('diameter')) / 2;
         });
     }
@@ -8683,6 +8664,21 @@ class StyleRule {
 }
 // 默认样式
 const DEFAULT_STYLE = {
+    'node.1times': {
+        diameter: '50px',
+    },
+    'node.125times': {
+        diameter: '62px',
+    },
+    'node.15times': {
+        diameter: '75px',
+    },
+    'node.175times': {
+        diameter: '88px',
+    },
+    'node.2times': {
+        diameter: '100px',
+    },
     node: {
         diameter: '50px',
         color: '#A5ABB6',
@@ -8703,19 +8699,19 @@ const DEFAULT_STYLE = {
 };
 const DEFAULT_SIZES = [
     {
-        diameter: '10px',
-    },
-    {
-        diameter: '20px',
-    },
-    {
         diameter: '50px',
     },
     {
-        diameter: '65px',
+        diameter: '62px',
     },
     {
-        diameter: '80px',
+        diameter: '75px',
+    },
+    {
+        diameter: '88px',
+    },
+    {
+        diameter: '100px',
     },
 ];
 const DEFAULT_ARRAY_WIDTHS = [
@@ -8900,6 +8896,11 @@ class GraphStyleModel {
                 caption: defaultCaption,
             };
         };
+        /**
+         * 计算对应的样式
+         * @param selector 选择器
+         * @returns
+         */
         this.calculateStyle = (selector) => {
             return new StyleElement(selector).applyRules(this.rules);
         };
@@ -9107,7 +9108,7 @@ class GraphStyleModel {
             });
         };
         /**
-         * 传入node为节点设置默认样式
+         * 传入node为节点 返回对应的样式
          * @param node 节点
          * @returns 节点的样式信息
          */
@@ -9119,7 +9120,7 @@ class GraphStyleModel {
             return this.calculateStyle(selector);
         };
         /**
-         *
+         * 传入节点 返回对应的样式
          * @param rel
          * @returns
          */
@@ -10301,6 +10302,7 @@ class Renderer {
 
 const noop = () => undefined;
 const nodeRingStrokeSize = 8;
+// 节点
 const nodeOutline = new Renderer({
     name: 'nodeOutline',
     onGraphChange(selection, viz) {
@@ -10326,6 +10328,7 @@ const nodeOutline = new Renderer({
     },
     onTick: noop,
 });
+// 节点名称
 const nodeCaption = new Renderer({
     name: 'nodeCaption',
     onGraphChange(selection, viz) {
@@ -10345,6 +10348,7 @@ const nodeCaption = new Renderer({
     },
     onTick: noop,
 });
+// 节点环 轮廓
 const nodeRing = new Renderer({
     name: 'nodeRing',
     onGraphChange(selection) {
@@ -10440,6 +10444,20 @@ var ZoomType;
     ZoomType["FIT"] = "fit";
 })(ZoomType || (ZoomType = {}));
 
+const mapProperties = (_) => Object.assign({}, ...stringifyValues(_));
+const stringifyValues = (obj) => Object.keys(obj).map((k) => ({
+    [k]: obj[k] === null ? 'null' : optionalToString(obj[k]),
+}));
+function mapNodes(nodes) {
+    return nodes.map((node) => new NodeModel(node.id, node.labels, mapProperties(node.properties), node.propertyTypes));
+}
+function mapRelationships(relationships, graph) {
+    return relationships.map((rel) => {
+        const source = graph.findNode(rel.startNodeId);
+        const target = graph.findNode(rel.endNodeId);
+        return new RelationshipModel(rel.id, source, target, rel.type, mapProperties(rel.properties), rel.propertyTypes);
+    });
+}
 function getGraphStats(graph) {
     const labelStats = {};
     const relTypeStats = {};
@@ -11610,9 +11628,12 @@ class GraphVisualization {
         var _a;
         if (options.updateNodes) {
             this.updateNodes();
+            this.forceSimulation.updateNodes(this.graph);
+            this.forceSimulation.updateRelationships(this.graph);
         }
         if (options.updateRelationships) {
             this.updateRelationships();
+            this.forceSimulation.updateRelationships(this.graph);
         }
         if ((_a = options.restartSimulation) !== null && _a !== void 0 ? _a : true) {
             this.forceSimulation.restart();
@@ -11660,7 +11681,11 @@ class GraphVisualization {
             .classed('selected', (relationship) => relationship.selected);
         relationship.forEach((renderer) => relationshipGroups.call(renderer.onGraphChange, this));
     }
-    // public updateNodesStyle(node: NodeModel, style: UpdateStyle) {}
+    // public updateNodesStyle(id: string, style: UpdateStyle) {
+    // const { color, size } = style;
+    // const node = this.graph.findNode(id);
+    // this.style.changeForSelector(node)
+    // }
     // public updateRelationShipsStyle() {}
     render() {
         this.geometry.onTick(this.graph);
@@ -11744,7 +11769,6 @@ class GraphVisualization {
             .call(nodeForceDragEventHandlers, this.forceSimulation.simulation);
         this.forceSimulation.updateNodes(this.graph);
         this.forceSimulation.updateRelationships(this.graph);
-        this.forceSimulation.updateRelationships(this.graph);
         this.precomputeAndStart();
     }
     // 网格布局
@@ -11774,4 +11798,4 @@ class GraphVisualization {
     }
 }
 
-export { GraphVisualization as default };
+export { NodeModel, RelationshipModel, GraphVisualization as default, mapNodes, mapRelationships };

@@ -1,10 +1,8 @@
 import { NodeModel } from './Node';
 import { RelationshipModel } from './Relationship';
-declare type NodeMap = Record<string, string[]>;
 export declare class GraphModel {
     _nodes: NodeModel[];
     _relationships: RelationshipModel[];
-    expandedNodeMap: NodeMap;
     nodeMap: Record<string, NodeModel>;
     relationshipMap: Record<string, RelationshipModel>;
     constructor();
@@ -12,9 +10,7 @@ export declare class GraphModel {
     relationships(): RelationshipModel[];
     groupedRelationships(): NodePair[];
     addNodes(nodes: NodeModel[]): void;
-    addExpandedNodes: (node: NodeModel, nodes: NodeModel[]) => void;
     removeNode(node: NodeModel): void;
-    collapseNode: (node: NodeModel) => void;
     updateNode(node: NodeModel): void;
     removeConnectedRelationships(node: NodeModel): void;
     addRelationships(relationships: RelationshipModel[]): void;
@@ -24,6 +20,8 @@ export declare class GraphModel {
     findNodeNeighbourIds(id: string): string[];
     findRelationship(id: string): RelationshipModel | undefined;
     findAllRelationshipToNode(node: NodeModel): RelationshipModel[];
+    getSelectedNode(): NodeModel[];
+    getSelectedRelationship(): RelationshipModel[];
     resetGraph(): void;
 }
 export declare class NodePair {
@@ -34,4 +32,3 @@ export declare class NodePair {
     isLoop(): boolean;
     toString(): string;
 }
-export {};
