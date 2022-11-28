@@ -1,6 +1,7 @@
 // import { shadeColor } from '../utils/wordColorCalculator';
 import { selectorArrayToString, selectorStringToArray } from '../utils/utils';
 import { NodeModel } from './Node';
+// import { RelationshipModel } from './Relationship';
 
 // 节点 边选择器
 export class Selector {
@@ -206,7 +207,9 @@ export class GraphStyleModel {
    * @returns
    */
   relationshipSelector = function (
-    rel: { type: null | string } = { type: null },
+    rel: {
+      type: null | string;
+    } = { type: null },
   ): Selector {
     const classes = rel.type != null ? [rel.type] : [];
     return new Selector('relationship', classes);
@@ -361,6 +364,18 @@ export class GraphStyleModel {
     this.rules.push(rule);
 
     rule.props = { ...rule.props, ...props };
+    return rule;
+  };
+
+  changeForSelectorWithRelationClass = (props: any): StyleRule | undefined => {
+    const selector = new Selector('relationship', []);
+    const rule = this.findRule(selector, this.rules);
+
+    rule &&
+      (rule.props = {
+        ...rule?.props,
+        ...props,
+      });
     return rule;
   };
 

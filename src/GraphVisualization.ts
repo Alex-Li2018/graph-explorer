@@ -44,8 +44,8 @@ import { GridLayout } from './layout/GridLayout';
 import { svgToImageDownload, DownloadImageOptions } from './imageDownload';
 
 type UpdateStyle = {
-  color: string;
-  size: number;
+  color?: string;
+  size?: number;
 };
 type MeasureSizeFn = () => { width: number; height: number };
 type ZoomEvent = (limitsReached: ZoomLimitsReached) => void;
@@ -335,7 +335,18 @@ export default class GraphVisualization {
     this.updateNodes();
   }
 
-  // public updateRelationShipsStyle() {}
+  public updateRelationShipsStyle(
+    style: UpdateStyle,
+    // relationship: RelationshipModel,
+  ) {
+    const { color } = style;
+    const colorStyle = color ? { color } : {};
+
+    this.style.changeForSelectorWithRelationClass({
+      ...colorStyle,
+    });
+    this.updateRelationships();
+  }
 
   private render() {
     this.geometry.onTick(this.graph);

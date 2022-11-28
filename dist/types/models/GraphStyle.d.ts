@@ -93,6 +93,7 @@ export declare class GraphStyleModel {
      */
     changeForSelector: (selector: Selector, props: any) => StyleRule;
     changeForSelectorWithNodeClass: (node: NodeModel, props: any) => StyleRule;
+    changeForSelectorWithRelationClass: (props: any) => StyleRule | undefined;
     /**
      * 删除对应的规则
      * @param rule

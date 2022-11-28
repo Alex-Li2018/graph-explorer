@@ -339,6 +339,7 @@ declare class GraphStyleModel {
      */
     changeForSelector: (selector: Selector, props: any) => StyleRule;
     changeForSelectorWithNodeClass: (node: NodeModel, props: any) => StyleRule;
+    changeForSelectorWithRelationClass: (props: any) => StyleRule | undefined;
     /**
      * 删除对应的规则
      * @param rule
@@ -638,6 +639,7 @@ declare class GraphVisualization {
     private updateNodes;
     private updateRelationships;
     updateNodesStyle(node: NodeModel, style: UpdateStyle): void;
+    updateRelationShipsStyle(style: UpdateStyle): void;
     private render;
     zoomByType: (zoomType: ZoomType) => void;
     private zoomToFitViewport;

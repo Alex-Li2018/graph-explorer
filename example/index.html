@@ -23,7 +23,6 @@
     <button id="color">改变选中节点的颜色</button>
     <button id="size">改变选中节点的尺寸</button>
     <button id="r-color">改变选中边的颜色</button>
-    <button id="r-ssize">改变选中边的尺寸</button>
     <div class="graph-data_wrap">
         <svg id="graph_wrap"></svg>
     </div>
@@ -213,12 +212,9 @@
             }
         }
         document.getElementById('r-color').onclick = function() {
-            if (instance.graph.getSelectedNode().length) {
-                instance.updateNodesStyle(instance.graph.getSelectedNode()[0], {color: 'red'})
+            if (instance.graph.getSelectedRelationship().length) {
+                instance.updateRelationShipsStyle({color: 'red'})
             }
-        }
-        document.getElementById('r-size').onclick = function() {
-
         }
     </script>
 </body>

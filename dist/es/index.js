@@ -4948,6 +4948,7 @@ const fitCaptionIntoCircle = (node, style, canvas2DContext) => {
 };
 
 // import { shadeColor } from '../utils/wordColorCalculator';
+// import { RelationshipModel } from './Relationship';
 // 节点 边选择器
 class Selector {
     constructor(tag, classes) {
@@ -5244,6 +5245,13 @@ class GraphStyleModel {
             rule = new StyleRule(newSelector, Object.assign(Object.assign({}, oldStyle), props));
             this.rules.push(rule);
             rule.props = Object.assign(Object.assign({}, rule.props), props);
+            return rule;
+        };
+        this.changeForSelectorWithRelationClass = (props) => {
+            const selector = new Selector('relationship', []);
+            const rule = this.findRule(selector, this.rules);
+            rule &&
+                (rule.props = Object.assign(Object.assign({}, rule === null || rule === void 0 ? void 0 : rule.props), props));
             return rule;
         };
         /**
@@ -7968,12 +7976,19 @@ class GraphVisualization {
     updateNodesStyle(node, style) {
         const { color, size } = style;
         color && node.class.push(color);
-        size && node.class.push(size);
+        size && node.class.push(`${size}`);
+        const colorStyle = color ? { color } : {};
         const sizeStyle = size ? { diameter: `${50 * size}px` } : {};
-        this.style.changeForSelectorWithNodeClass(node, Object.assign({ color }, sizeStyle));
+        this.style.changeForSelectorWithNodeClass(node, Object.assign(Object.assign({}, colorStyle), sizeStyle));
         this.updateNodes();
     }
-    // public updateRelationShipsStyle() {}
+    updateRelationShipsStyle(style) {
+        const { color, size } = style;
+        const colorStyle = color ? { color } : {};
+        const sizeStyle = size ? { 'shaft-width': `${1 * size}px` } : {};
+        this.style.changeForSelectorWithRelationClass(Object.assign(Object.assign({}, colorStyle), sizeStyle));
+        this.updateRelationships();
+    }
     render() {
         this.geometry.onTick(this.graph);
         const nodeGroups = this.container

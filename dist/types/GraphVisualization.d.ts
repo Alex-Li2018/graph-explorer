@@ -57,6 +57,7 @@ export default class GraphVisualization {
     private updateNodes;
     private updateRelationships;
     updateNodesStyle(node: NodeModel, style: UpdateStyle): void;
+    updateRelationShipsStyle(style: UpdateStyle): void;
     private render;
     zoomByType: (zoomType: ZoomType) => void;
     private zoomToFitViewport;
