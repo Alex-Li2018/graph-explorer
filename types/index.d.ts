@@ -132,6 +132,7 @@ declare class NodeModel {
     hoverFixed: boolean;
     initialPositionCalculated: boolean;
     degree: number;
+    class: any[];
     constructor(id: string, labels: string[], properties: NodeProperties, propertyTypes: Record<string, string>);
     toJSON(): NodeProperties;
     relationshipCount(graph: GraphModel): number;
@@ -269,21 +270,14 @@ declare class StyleRule {
     matches: (selector: Selector) => boolean;
     matchesExact: (selector: Selector) => boolean;
 }
-declare type DefaultSizeType = {
-    diameter: string;
-};
-declare type DefaultArrayWidthType = {
-    'shaft-width': string;
-};
 declare type DefaultColorType = {
     color: string;
     'border-color': string;
     'text-color-internal': string;
 };
 declare class GraphStyleModel {
-    private useGeneratedDefaultColors;
     rules: StyleRule[];
-    constructor(useGeneratedDefaultColors?: boolean);
+    constructor();
     parseSelector: (key: string) => Selector;
     /**
      *
@@ -292,6 +286,7 @@ declare class GraphStyleModel {
      */
     nodeSelector: (node?: {
         labels: null | string[];
+        class: string[];
     }) => Selector;
     /**
      * 关系选择其
@@ -343,6 +338,7 @@ declare class GraphStyleModel {
      * @returns stylerRules新的规则
      */
     changeForSelector: (selector: Selector, props: any) => StyleRule;
+    changeForSelectorWithNodeClass: (node: NodeModel, props: any) => StyleRule;
     /**
      * 删除对应的规则
      * @param rule
@@ -358,8 +354,6 @@ declare class GraphStyleModel {
      * @param data 样式
      */
     loadRules: (data?: any) => void;
-    defaultSizes: () => DefaultSizeType[];
-    defaultArrayWidths: () => DefaultArrayWidthType[];
     defaultColors: () => DefaultColorType[];
     interpolate: (str: any, item: any) => any;
     /**
@@ -596,6 +590,10 @@ interface DownloadImageOptions {
     background?: string | null;
 }
 
+declare type UpdateStyle = {
+    color: string;
+    size: number;
+};
 declare type MeasureSizeFn = () => {
     width: number;
     height: number;
@@ -639,6 +637,7 @@ declare class GraphVisualization {
     }): void;
     private updateNodes;
     private updateRelationships;
+    updateNodesStyle(node: NodeModel, style: UpdateStyle): void;
     private render;
     zoomByType: (zoomType: ZoomType) => void;
     private zoomToFitViewport;

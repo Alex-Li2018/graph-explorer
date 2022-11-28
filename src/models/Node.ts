@@ -33,6 +33,8 @@ export class NodeModel {
   initialPositionCalculated: boolean;
   // 节点的度
   degree: number;
+  // 样式信息 可以修改节点的颜色 大小
+  class: any[];
 
   constructor(
     id: string,
@@ -60,6 +62,7 @@ export class NodeModel {
     this.hoverFixed = false;
     this.initialPositionCalculated = false;
     this.degree = 0;
+    this.class = [];
   }
 
   toJSON(): NodeProperties {

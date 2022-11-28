@@ -1,5 +1,6 @@
-import { calculateDefaultNodeColors } from '../utils/wordColorCalculator';
+// import { shadeColor } from '../utils/wordColorCalculator';
 import { selectorArrayToString, selectorStringToArray } from '../utils/utils';
+import { NodeModel } from './Node';
 
 // 节点 边选择器
 export class Selector {
@@ -78,21 +79,6 @@ class StyleRule {
 
 // 默认样式
 const DEFAULT_STYLE = {
-  'node.1times': {
-    diameter: '50px',
-  },
-  'node.125times': {
-    diameter: '62px',
-  },
-  'node.15times': {
-    diameter: '75px',
-  },
-  'node.175times': {
-    diameter: '88px',
-  },
-  'node.2times': {
-    diameter: '100px',
-  },
   node: {
     diameter: '50px',
     color: '#A5ABB6',
@@ -111,52 +97,6 @@ const DEFAULT_STYLE = {
     caption: '<type>',
   },
 };
-// 直径
-type DefaultSizeType = { diameter: string };
-const DEFAULT_SIZES: DefaultSizeType[] = [
-  {
-    diameter: '50px',
-  },
-  {
-    diameter: '62px',
-  },
-  {
-    diameter: '75px',
-  },
-  {
-    diameter: '88px',
-  },
-  {
-    diameter: '100px',
-  },
-];
-type DefaultArrayWidthType = { 'shaft-width': string };
-const DEFAULT_ARRAY_WIDTHS: DefaultArrayWidthType[] = [
-  {
-    'shaft-width': '1px',
-  },
-  {
-    'shaft-width': '2px',
-  },
-  {
-    'shaft-width': '3px',
-  },
-  {
-    'shaft-width': '5px',
-  },
-  {
-    'shaft-width': '8px',
-  },
-  {
-    'shaft-width': '13px',
-  },
-  {
-    'shaft-width': '25px',
-  },
-  {
-    'shaft-width': '38px',
-  },
-];
 
 type DefaultColorType = {
   color: string;
@@ -230,7 +170,7 @@ const DEFAULT_COLORS: DefaultColorType[] = [
 export class GraphStyleModel {
   rules: StyleRule[];
 
-  constructor(private useGeneratedDefaultColors: boolean = false) {
+  constructor() {
     this.rules = [];
     try {
       this.loadRules();
@@ -250,9 +190,13 @@ export class GraphStyleModel {
    * @returns 节点的选择{ tag: node, class: [lables]}
    */
   nodeSelector = function (
-    node: { labels: null | string[] } = { labels: null },
+    node: { labels: null | string[]; class: string[] } = {
+      labels: null,
+      class: [],
+    },
   ): Selector {
-    const classes = node.labels != null ? node.labels : [];
+    const classes =
+      node.labels != null ? [...node.labels, ...node.class] : [...node.class];
     return new Selector('node', classes);
   };
 
@@ -380,22 +324,9 @@ export class GraphStyleModel {
       selector.classes.sort().slice(0, 1),
     );
     if (defaultColor) {
-      const calcColor = (label: Selector): DefaultColorType => {
-        const { backgroundColor, borderColor, textColor } =
-          calculateDefaultNodeColors(label.classes[0]);
-
-        return {
-          'border-color': borderColor,
-          'text-color-internal': textColor,
-          color: backgroundColor,
-        };
-      };
-
       this.changeForSelector(
         minimalSelector,
-        this.useGeneratedDefaultColors
-          ? calcColor(minimalSelector)
-          : this.findAvailableDefaultColor(this.rules),
+        this.findAvailableDefaultColor(this.rules),
       );
     }
     if (defaultCaption) {
@@ -415,6 +346,20 @@ export class GraphStyleModel {
       rule = new StyleRule(selector, props);
       this.rules.push(rule);
     }
+    rule.props = { ...rule.props, ...props };
+    return rule;
+  };
+
+  changeForSelectorWithNodeClass = (node: NodeModel, props: any): StyleRule => {
+    const classes = node.labels != null ? [...node.labels] : [];
+    const oldSelector = new Selector('node', classes);
+    const newSelector = this.nodeSelector(node);
+
+    let rule = this.findRule(oldSelector, this.rules);
+    const oldStyle = rule ? rule.props : {};
+    rule = new StyleRule(newSelector, { ...oldStyle, ...props });
+    this.rules.push(rule);
+
     rule.props = { ...rule.props, ...props };
     return rule;
   };
@@ -537,14 +482,6 @@ export class GraphStyleModel {
       const props = localData[key];
       this.rules.push(new StyleRule(this.parseSelector(key), props));
     }
-  };
-
-  defaultSizes = function (): DefaultSizeType[] {
-    return DEFAULT_SIZES;
-  };
-
-  defaultArrayWidths = function (): DefaultArrayWidthType[] {
-    return DEFAULT_ARRAY_WIDTHS;
   };
 
   defaultColors = function (): DefaultColorType[] {

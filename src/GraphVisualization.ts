@@ -43,10 +43,10 @@ import { CircularLayout } from './layout/CircularLayout';
 import { GridLayout } from './layout/GridLayout';
 import { svgToImageDownload, DownloadImageOptions } from './imageDownload';
 
-// type UpdateStyle = {
-//   color: string;
-//   size: string;
-// };
+type UpdateStyle = {
+  color: string;
+  size: number;
+};
 type MeasureSizeFn = () => { width: number; height: number };
 type ZoomEvent = (limitsReached: ZoomLimitsReached) => void;
 type VoidEvent = () => void;
@@ -320,11 +320,20 @@ export default class GraphVisualization {
     );
   }
 
-  // public updateNodesStyle(id: string, style: UpdateStyle) {
-  // const { color, size } = style;
-  // const node = this.graph.findNode(id);
-  // this.style.changeForSelector(node)
-  // }
+  public updateNodesStyle(node: NodeModel, style: UpdateStyle) {
+    const { color, size } = style;
+    color && node.class.push(color);
+    size && node.class.push(`${size}`);
+
+    const colorStyle = color ? { color } : {};
+    const sizeStyle = size ? { diameter: `${50 * size}px` } : {};
+
+    this.style.changeForSelectorWithNodeClass(node, {
+      ...colorStyle,
+      ...sizeStyle,
+    });
+    this.updateNodes();
+  }
 
   // public updateRelationShipsStyle() {}
 

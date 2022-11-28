@@ -1,6 +1,7 @@
 import { BasicNodesAndRels } from './types';
 import { GraphModel } from './models/Graph';
 import { GraphStyleModel } from './models/GraphStyle';
+import { NodeModel } from './models/Node';
 import { ForceSimulation } from './layout/force/ForceSimulation';
 import { ZoomLimitsReached, ZoomType, GetNodeNeighboursFn, VizItem, LayoutType } from './types';
 import { GraphEventHandlerModel } from './GraphEventHandlerModel';
@@ -8,6 +9,10 @@ import { GraphStats } from './utils/mapper';
 import { CircularLayout } from './layout/CircularLayout';
 import { GridLayout } from './layout/GridLayout';
 import { DownloadImageOptions } from './imageDownload';
+declare type UpdateStyle = {
+    color: string;
+    size: number;
+};
 declare type MeasureSizeFn = () => {
     width: number;
     height: number;
@@ -51,6 +56,7 @@ export default class GraphVisualization {
     }): void;
     private updateNodes;
     private updateRelationships;
+    updateNodesStyle(node: NodeModel, style: UpdateStyle): void;
     private render;
     zoomByType: (zoomType: ZoomType) => void;
     private zoomToFitViewport;

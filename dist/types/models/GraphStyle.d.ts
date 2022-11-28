@@ -1,3 +1,4 @@
+import { NodeModel } from './Node';
 export declare class Selector {
     tag: string;
     classes: string[];
@@ -23,21 +24,14 @@ declare class StyleRule {
     matches: (selector: Selector) => boolean;
     matchesExact: (selector: Selector) => boolean;
 }
-declare type DefaultSizeType = {
-    diameter: string;
-};
-declare type DefaultArrayWidthType = {
-    'shaft-width': string;
-};
 declare type DefaultColorType = {
     color: string;
     'border-color': string;
     'text-color-internal': string;
 };
 export declare class GraphStyleModel {
-    private useGeneratedDefaultColors;
     rules: StyleRule[];
-    constructor(useGeneratedDefaultColors?: boolean);
+    constructor();
     parseSelector: (key: string) => Selector;
     /**
      *
@@ -46,6 +40,7 @@ export declare class GraphStyleModel {
      */
     nodeSelector: (node?: {
         labels: null | string[];
+        class: string[];
     }) => Selector;
     /**
      * 关系选择其
@@ -97,6 +92,7 @@ export declare class GraphStyleModel {
      * @returns stylerRules新的规则
      */
     changeForSelector: (selector: Selector, props: any) => StyleRule;
+    changeForSelectorWithNodeClass: (node: NodeModel, props: any) => StyleRule;
     /**
      * 删除对应的规则
      * @param rule
@@ -112,8 +108,6 @@ export declare class GraphStyleModel {
      * @param data 样式
      */
     loadRules: (data?: any) => void;
-    defaultSizes: () => DefaultSizeType[];
-    defaultArrayWidths: () => DefaultArrayWidthType[];
     defaultColors: () => DefaultColorType[];
     interpolate: (str: any, item: any) => any;
     /**

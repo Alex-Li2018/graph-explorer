@@ -20,8 +20,10 @@
     <bUtton id="ring">环形</bUtton>
     <bUtton id="grid">网格</bUtton>
     <bUtton id="download">下载</bUtton>
-    <button id="color">改变选中的颜色</button>
-    <button id="size">改变选中的尺寸</button>
+    <button id="color">改变选中节点的颜色</button>
+    <button id="size">改变选中节点的尺寸</button>
+    <button id="r-color">改变选中边的颜色</button>
+    <button id="r-ssize">改变选中边的尺寸</button>
     <div class="graph-data_wrap">
         <svg id="graph_wrap"></svg>
     </div>
@@ -201,10 +203,21 @@
 
     <script>
         document.getElementById('color').onclick = function() {
-            console.log(instance.graph)
-            instance.updateNodesStyle(instance.graph.getSelectedNode(), {color: 'red'})
+            if (instance.graph.getSelectedNode().length) {
+                instance.updateNodesStyle(instance.graph.getSelectedNode()[0], {color: 'red'})
+            }
         }
         document.getElementById('size').onclick = function() {
+            if (instance.graph.getSelectedNode().length) {
+                instance.updateNodesStyle(instance.graph.getSelectedNode()[0], {size: 2})
+            }
+        }
+        document.getElementById('r-color').onclick = function() {
+            if (instance.graph.getSelectedNode().length) {
+                instance.updateNodesStyle(instance.graph.getSelectedNode()[0], {color: 'red'})
+            }
+        }
+        document.getElementById('r-size').onclick = function() {
 
         }
     </script>

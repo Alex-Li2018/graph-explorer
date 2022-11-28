@@ -33,6 +33,7 @@ export declare class NodeModel {
     hoverFixed: boolean;
     initialPositionCalculated: boolean;
     degree: number;
+    class: any[];
     constructor(id: string, labels: string[], properties: NodeProperties, propertyTypes: Record<string, string>);
     toJSON(): NodeProperties;
     relationshipCount(graph: GraphModel): number;
