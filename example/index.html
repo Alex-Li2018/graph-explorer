@@ -23,6 +23,8 @@
     <button id="color">改变选中节点的颜色</button>
     <button id="size">改变选中节点的尺寸</button>
     <button id="r-color">改变选中边的颜色</button>
+    <button id="degree">出入度展示</button>
+    <button id="reset-degree">重置出入度展示</button>
     <div class="graph-data_wrap">
         <svg id="graph_wrap"></svg>
     </div>
@@ -215,6 +217,15 @@
             if (instance.graph.getSelectedRelationship().length) {
                 instance.updateRelationShipsStyle({color: 'red'})
             }
+        }
+    </script>
+
+    <script>
+        document.getElementById('degree').onclick = function() {
+            instance.updateGraphWithDegree()
+        }
+        document.getElementById('reset-degree').onclick = function() {
+            instance.updateGraphWithResetDegree()
         }
     </script>
 </body>

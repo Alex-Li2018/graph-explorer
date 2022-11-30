@@ -4854,7 +4854,14 @@ class GraphGeometryModel {
     setNodeRadii(nodes) {
         nodes.forEach((node) => {
             // 会设置当前节点的样式
-            node.radius = parseFloat(this.style.forNode(node).get('diameter')) / 2;
+            if (node.degree) {
+                node.radius =
+                    (parseFloat(this.style.forNode(node).get('diameter')) / 2) *
+                        node.degree;
+            }
+            else {
+                node.radius = parseFloat(this.style.forNode(node).get('diameter')) / 2;
+            }
         });
     }
     onGraphChange(graph, options = { updateNodes: true, updateRelationships: true }) {
@@ -7778,7 +7785,7 @@ class GraphVisualization {
         };
         this.root = d3Select(element);
         // 初始化配置
-        this.initConfig(isFullscreen, layout, wheelZoomRequiresModKey);
+        this.initConfig(isFullscreen, layout, wheelZoomRequiresModKey, initialZoomToFit);
         // 初始化图谱数据
         this.initGraphData(graphData);
         // 初始化样式
@@ -7791,14 +7798,17 @@ class GraphVisualization {
         this.containerZoomEvent(onZoomEvent, onDisplayZoomWheelInfoMessage);
         // 初始化所有节点 边
         this.initNodeAndRelationship();
+        // 初始化缩放比例
+        this.setInitialZoom();
         // 初始化布局控制逻辑
-        this.initLayoutController();
+        this.execLayoutController();
     }
     // 初始化配置
-    initConfig(isFullscreen, layout, wheelZoomRequiresModKey) {
+    initConfig(isFullscreen, layout, wheelZoomRequiresModKey, initialZoomToFit) {
         this.layout = layout;
         this.isFullscreen = isFullscreen;
         this.wheelZoomRequiresModKey = wheelZoomRequiresModKey;
+        this.initialZoomToFit = initialZoomToFit;
     }
     // 初始化图谱数据
     initGraphData(graphData) {
@@ -7891,7 +7901,7 @@ class GraphVisualization {
         this.updateRelationships();
     }
     // 初始化布局
-    initLayoutController() {
+    execLayoutController() {
         switch (this.layout) {
             case 'force':
                 this.forceSimulationHandler();
@@ -7961,6 +7971,7 @@ class GraphVisualization {
             .classed('selected', (relationship) => relationship.selected);
         relationship.forEach((renderer) => relationshipGroups.call(renderer.onGraphChange, this));
     }
+    // 更新节点样式
     updateNodesStyle(node, style) {
         const { color, size } = style;
         color && node.class.push(color);
@@ -8049,7 +8060,6 @@ class GraphVisualization {
     // 力模型布局
     forceSimulationHandler() {
         this.adjustZoomMinScaleExtentToFitGraph();
-        this.setInitialZoom();
         this.forceSimulation = new ForceSimulation(this.render.bind(this));
         // drag事件
         this.container
@@ -8080,6 +8090,26 @@ class GraphVisualization {
     // 下载图片
     downloadImage(dom, fileName, options) {
         svgToImageDownload(dom, fileName, options);
+    }
+    // 根据出入度更新图谱
+    updateGraphWithDegree() {
+        const nodes = this.graph.nodes();
+        nodes.forEach((item) => {
+            item.degree = item.relationshipCount(this.graph);
+        });
+        this.updateNodes();
+        this.updateRelationships();
+        this.execLayoutController();
+    }
+    // 重置出入度更新图谱
+    updateGraphWithResetDegree() {
+        const nodes = this.graph.nodes();
+        nodes.forEach((item) => {
+            item.degree = 0;
+        });
+        this.updateNodes();
+        this.updateRelationships();
+        this.execLayoutController();
     }
     // 销毁画布
     destroy() {

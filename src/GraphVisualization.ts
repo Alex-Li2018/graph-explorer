@@ -94,7 +94,12 @@ export default class GraphVisualization {
     this.root = d3Select(element);
 
     // 初始化配置
-    this.initConfig(isFullscreen, layout, wheelZoomRequiresModKey);
+    this.initConfig(
+      isFullscreen,
+      layout,
+      wheelZoomRequiresModKey,
+      initialZoomToFit,
+    );
     // 初始化图谱数据
     this.initGraphData(graphData);
     // 初始化样式
@@ -107,8 +112,10 @@ export default class GraphVisualization {
     this.containerZoomEvent(onZoomEvent, onDisplayZoomWheelInfoMessage);
     // 初始化所有节点 边
     this.initNodeAndRelationship();
+    // 初始化缩放比例
+    this.setInitialZoom();
     // 初始化布局控制逻辑
-    this.initLayoutController();
+    this.execLayoutController();
   }
 
   // 初始化配置
@@ -116,10 +123,12 @@ export default class GraphVisualization {
     isFullscreen: boolean,
     layout: LayoutType,
     wheelZoomRequiresModKey?: boolean,
+    initialZoomToFit?: boolean,
   ) {
     this.layout = layout;
     this.isFullscreen = isFullscreen;
     this.wheelZoomRequiresModKey = wheelZoomRequiresModKey;
+    this.initialZoomToFit = initialZoomToFit;
   }
 
   // 初始化图谱数据
@@ -230,7 +239,7 @@ export default class GraphVisualization {
   }
 
   // 初始化布局
-  private initLayoutController() {
+  private execLayoutController() {
     switch (this.layout) {
       case 'force':
         this.forceSimulationHandler();
@@ -320,6 +329,7 @@ export default class GraphVisualization {
     );
   }
 
+  // 更新节点样式
   public updateNodesStyle(node: NodeModel, style: UpdateStyle) {
     const { color, size } = style;
     color && node.class.push(color);
@@ -557,7 +567,6 @@ export default class GraphVisualization {
   // 力模型布局
   public forceSimulationHandler() {
     this.adjustZoomMinScaleExtentToFitGraph();
-    this.setInitialZoom();
     this.forceSimulation = new ForceSimulation(this.render.bind(this));
 
     // drag事件
@@ -599,6 +608,30 @@ export default class GraphVisualization {
     options?: DownloadImageOptions,
   ) {
     svgToImageDownload(dom, fileName, options);
+  }
+
+  // 根据出入度更新图谱
+  public updateGraphWithDegree() {
+    const nodes = this.graph.nodes();
+    nodes.forEach((item) => {
+      item.degree = item.relationshipCount(this.graph);
+    });
+
+    this.updateNodes();
+    this.updateRelationships();
+    this.execLayoutController();
+  }
+
+  // 重置出入度更新图谱
+  public updateGraphWithResetDegree() {
+    const nodes = this.graph.nodes();
+    nodes.forEach((item) => {
+      item.degree = 0;
+    });
+
+    this.updateNodes();
+    this.updateRelationships();
+    this.execLayoutController();
   }
 
   // 销毁画布

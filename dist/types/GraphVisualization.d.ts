@@ -48,7 +48,7 @@ export default class GraphVisualization {
     private innitContainer;
     private containerZoomEvent;
     initNodeAndRelationship(): void;
-    private initLayoutController;
+    private execLayoutController;
     update(options: {
         updateNodes: boolean;
         updateRelationships: boolean;
@@ -74,6 +74,8 @@ export default class GraphVisualization {
     forceSimulationHandler(): void;
     gridLayoutHandler(): void;
     downloadImage(dom: Element, fileName?: string, options?: DownloadImageOptions): void;
+    updateGraphWithDegree(): void;
+    updateGraphWithResetDegree(): void;
     destroy(): void;
 }
 export {};

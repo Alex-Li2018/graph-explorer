@@ -41,7 +41,13 @@ export class GraphGeometryModel {
   setNodeRadii(nodes: NodeModel[]): void {
     nodes.forEach((node) => {
       // 会设置当前节点的样式
-      node.radius = parseFloat(this.style.forNode(node).get('diameter')) / 2;
+      if (node.degree) {
+        node.radius =
+          (parseFloat(this.style.forNode(node).get('diameter')) / 2) *
+          node.degree;
+      } else {
+        node.radius = parseFloat(this.style.forNode(node).get('diameter')) / 2;
+      }
     });
   }
 
