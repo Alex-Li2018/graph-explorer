@@ -19,8 +19,6 @@ export declare class NodeModel {
     radius: number;
     caption: NodeCaptionLine[];
     selected: boolean;
-    expanded: boolean;
-    minified: boolean;
     contextMenu?: {
         menuSelection: string;
         menuContent: string;

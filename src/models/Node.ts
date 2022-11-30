@@ -21,8 +21,6 @@ export class NodeModel {
   radius: number;
   caption: NodeCaptionLine[];
   selected: boolean;
-  expanded: boolean;
-  minified: boolean;
   contextMenu?: { menuSelection: string; menuContent: string; label: string };
 
   x: number;
@@ -55,8 +53,6 @@ export class NodeModel {
     this.radius = 0;
     this.caption = [];
     this.selected = false;
-    this.expanded = false;
-    this.minified = false;
     this.x = 0;
     this.y = 0;
     this.hoverFixed = false;

@@ -118,8 +118,6 @@ declare class NodeModel {
     radius: number;
     caption: NodeCaptionLine[];
     selected: boolean;
-    expanded: boolean;
-    minified: boolean;
     contextMenu?: {
         menuSelection: string;
         menuContent: string;
@@ -592,8 +590,8 @@ interface DownloadImageOptions {
 }
 
 declare type UpdateStyle = {
-    color: string;
-    size: number;
+    color?: string;
+    size?: number;
 };
 declare type MeasureSizeFn = () => {
     width: number;
@@ -659,4 +657,4 @@ declare class GraphVisualization {
     destroy(): void;
 }
 
-export { NodeModel, RelationshipModel, GraphVisualization as default, mapNodes, mapRelationships };
+export { GraphVisualization, NodeModel, RelationshipModel, mapNodes, mapRelationships };

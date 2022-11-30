@@ -10,8 +10,8 @@ import { CircularLayout } from './layout/CircularLayout';
 import { GridLayout } from './layout/GridLayout';
 import { DownloadImageOptions } from './imageDownload';
 declare type UpdateStyle = {
-    color: string;
-    size: number;
+    color?: string;
+    size?: number;
 };
 declare type MeasureSizeFn = () => {
     width: number;

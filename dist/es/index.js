@@ -3927,8 +3927,6 @@ class GraphModel {
     updateNode(node) {
         if (this.findNode(node.id) != null) {
             this.removeNode(node);
-            node.expanded = false;
-            node.minified = true;
             this.addNodes([node]);
         }
     }
@@ -4039,8 +4037,6 @@ class NodeModel {
         this.radius = 0;
         this.caption = [];
         this.selected = false;
-        this.expanded = false;
-        this.minified = false;
         this.x = 0;
         this.y = 0;
         this.hoverFixed = false;
@@ -7983,10 +7979,9 @@ class GraphVisualization {
         this.updateNodes();
     }
     updateRelationShipsStyle(style) {
-        const { color, size } = style;
+        const { color } = style;
         const colorStyle = color ? { color } : {};
-        const sizeStyle = size ? { 'shaft-width': `${1 * size}px` } : {};
-        this.style.changeForSelectorWithRelationClass(Object.assign(Object.assign({}, colorStyle), sizeStyle));
+        this.style.changeForSelectorWithRelationClass(Object.assign({}, colorStyle));
         this.updateRelationships();
     }
     render() {
@@ -8100,4 +8095,4 @@ class GraphVisualization {
     }
 }
 
-export { NodeModel, RelationshipModel, GraphVisualization as default, mapNodes, mapRelationships };
+export { GraphVisualization, NodeModel, RelationshipModel, mapNodes, mapRelationships };
