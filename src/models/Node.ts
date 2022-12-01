@@ -27,6 +27,7 @@ export class NodeModel {
   y: number;
   fx: number | null = null;
   fy: number | null = null;
+  // 鼠标移入固定节点 移出可以移动节点
   hoverFixed: boolean;
   initialPositionCalculated: boolean;
   // 节点的度

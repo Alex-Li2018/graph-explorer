@@ -403,7 +403,6 @@ declare class GraphEventHandlerModel {
     onItemMouseOver: (item: VizItem, event?: Event) => void;
     onItemSelected: (item: VizItem, event?: Event) => void;
     onGraphInteraction: (item: VizItem, event: Event) => void;
-    selectedItem: NodeModel | RelationshipModel | null;
     constructor(graph: GraphModel, visualization: GraphVisualization, getNodeNeighbours: GetNodeNeighboursFn, onItemMouseOver: (item: VizItem, event?: Event) => void, onItemSelected: (item: VizItem, event?: Event) => void, onGraphModelChange: (stats: GraphStats) => void, onGraphInteraction: (item: VizItem, event: Event) => void);
     graphModelChanged(): void;
     selectItem(item: NodeModel | RelationshipModel): void;
@@ -416,6 +415,8 @@ declare class GraphEventHandlerModel {
     onRelationshipClicked(relationship: RelationshipModel, event: Event): void;
     onCanvasClicked(): void;
     onItemMouseOut(): void;
+    clearAllNodesSelected(): void;
+    clearAllRelationshipsSelected(): void;
     bindEventHandlers(): void;
 }
 

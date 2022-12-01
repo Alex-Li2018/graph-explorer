@@ -18,7 +18,6 @@ export class GraphEventHandlerModel {
   onItemMouseOver: (item: VizItem, event?: Event) => void;
   onItemSelected: (item: VizItem, event?: Event) => void;
   onGraphInteraction: (item: VizItem, event: Event) => void;
-  selectedItem: NodeModel | RelationshipModel | null;
 
   constructor(
     graph: GraphModel,
@@ -32,7 +31,6 @@ export class GraphEventHandlerModel {
     this.graph = graph;
     this.visualization = visualization;
     this.getNodeNeighbours = getNodeNeighbours;
-    this.selectedItem = null;
     this.onItemMouseOver = onItemMouseOver;
     this.onItemSelected = onItemSelected;
     this.onGraphInteraction = onGraphInteraction;
@@ -45,32 +43,27 @@ export class GraphEventHandlerModel {
   }
 
   selectItem(item: NodeModel | RelationshipModel): void {
-    // 可以选择多个
-    if (this.selectedItem) {
-      this.selectedItem.selected = false;
-    }
-    this.selectedItem = item;
     item.selected = true;
 
     this.visualization.update({
-      updateNodes: this.selectedItem.isNode,
-      updateRelationships: this.selectedItem.isRelationship,
+      updateNodes: item.isNode,
+      updateRelationships: item.isRelationship,
       restartSimulation: false,
     });
   }
 
   deselectItem(event?: Event): void {
-    if (this.selectedItem) {
-      this.selectedItem.selected = false;
+    this.graph.getSelectedNode() && this.clearAllNodesSelected();
 
-      this.visualization.update({
-        updateNodes: this.selectedItem.isNode,
-        updateRelationships: this.selectedItem.isRelationship,
-        restartSimulation: false,
-      });
+    this.graph.getSelectedRelationship() &&
+      this.clearAllRelationshipsSelected();
 
-      this.selectedItem = null;
-    }
+    this.visualization.update({
+      updateNodes: true,
+      updateRelationships: true,
+      restartSimulation: false,
+    });
+
     this.onItemSelected(
       {
         type: 'canvas',
@@ -90,35 +83,22 @@ export class GraphEventHandlerModel {
     node.hoverFixed = false;
     node.fx = node.x;
     node.fy = node.y;
-    if (!node.selected) {
-      this.selectItem(node);
-      this.onItemSelected(
-        {
-          type: 'node',
-          item: node,
-        },
-        event,
-      );
-    } else {
-      this.deselectItem(event);
-    }
+
+    // 情况所有的选中状态
+    this.clearAllNodesSelected();
+
+    this.selectItem(node);
+    this.onItemSelected(
+      {
+        type: 'node',
+        item: node,
+      },
+      event,
+    );
   }
 
   // 节点双击 触发
   nodeDblClicked(d: NodeModel, event: Event): void {
-    // const graph = this.graph;
-    // const visualization = this.visualization;
-    // const graphModelChanged = this.graphModelChanged.bind(this);
-    // this.getNodeNeighbours(
-    //   d,
-    //   this.graph.findNodeNeighbourIds(d.id),
-    //   ({ nodes, relationships }) => {
-    //     graph.addExpandedNodes(d, mapNodes(nodes));
-    //     graph.addRelationships(mapRelationships(relationships, graph));
-    //     visualization.update({ updateNodes: true, updateRelationships: true });
-    //     graphModelChanged();
-    //   },
-    // );
     this.onGraphInteraction(
       {
         type: 'node',
@@ -168,18 +148,15 @@ export class GraphEventHandlerModel {
   }
 
   onRelationshipClicked(relationship: RelationshipModel, event: Event): void {
-    if (!relationship.selected) {
-      this.selectItem(relationship);
-      this.onItemSelected(
-        {
-          type: 'relationship',
-          item: relationship,
-        },
-        event,
-      );
-    } else {
-      this.deselectItem(event);
-    }
+    this.clearAllRelationshipsSelected();
+    this.selectItem(relationship);
+    this.onItemSelected(
+      {
+        type: 'relationship',
+        item: relationship,
+      },
+      event,
+    );
   }
 
   onCanvasClicked(): void {
@@ -194,6 +171,14 @@ export class GraphEventHandlerModel {
         relationshipCount: this.graph.relationships().length,
       },
     });
+  }
+
+  clearAllNodesSelected() {
+    this.graph.nodes().map((item) => (item.selected = false));
+  }
+
+  clearAllRelationshipsSelected() {
+    this.graph.relationships().map((item) => (item.selected = false));
   }
 
   bindEventHandlers(): void {
