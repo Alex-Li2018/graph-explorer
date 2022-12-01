@@ -7961,10 +7961,12 @@ class GraphVisualization {
         this.updateNodes();
     }
     updateRelationShipsStyle(style) {
-        const { color } = style;
+        const { color, size } = style;
         const colorStyle = color ? { color } : {};
-        this.style.changeForSelectorWithRelationClass(Object.assign({}, colorStyle));
+        const sizeStyle = size ? { 'shaft-width': `${1 * size}px` } : {};
+        this.style.changeForSelectorWithRelationClass(Object.assign(Object.assign({}, colorStyle), sizeStyle));
         this.updateRelationships();
+        this.render();
     }
     render() {
         this.geometry.onTick(this.graph);

@@ -23,6 +23,7 @@
     <button id="color">改变选中节点的颜色</button>
     <button id="size">改变选中节点的尺寸</button>
     <button id="r-color">改变选中边的颜色</button>
+    <button id="r-size">改变选中边的尺寸</button>
     <button id="degree">出入度展示</button>
     <button id="reset-degree">重置出入度展示</button>
     <div class="graph-data_wrap">
@@ -216,6 +217,11 @@
         document.getElementById('r-color').onclick = function() {
             if (instance.graph.getSelectedRelationship().length) {
                 instance.updateRelationShipsStyle({color: 'red'})
+            }
+        }
+        document.getElementById('r-size').onclick = function() {
+            if (instance.graph.getSelectedRelationship().length) {
+                instance.updateRelationShipsStyle({ size: 4})
             }
         }
     </script>

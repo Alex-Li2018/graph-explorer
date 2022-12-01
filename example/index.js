@@ -6800,7 +6800,6 @@ class GraphEventHandlerModel {
         this.graph = graph;
         this.visualization = visualization;
         this.getNodeNeighbours = getNodeNeighbours;
-        this.selectedItem = null;
         this.onItemMouseOver = onItemMouseOver;
         this.onItemSelected = onItemSelected;
         this.onGraphInteraction = onGraphInteraction;
@@ -6810,7 +6809,7 @@ class GraphEventHandlerModel {
         this.onGraphModelChange(getGraphStats(this.graph));
     }
     selectItem(item) {
-        item.selected = true
+        item.selected = true;
         this.visualization.update({
             updateNodes: item.isNode,
             updateRelationships: item.isRelationship,
@@ -7962,10 +7961,12 @@ class GraphVisualization {
         this.updateNodes();
     }
     updateRelationShipsStyle(style) {
-        const { color } = style;
+        const { color, size } = style;
         const colorStyle = color ? { color } : {};
-        this.style.changeForSelectorWithRelationClass(Object.assign({}, colorStyle));
+        const sizeStyle = size ? { 'shaft-width': `${1 * size}px` } : {};
+        this.style.changeForSelectorWithRelationClass(Object.assign(Object.assign({}, colorStyle), sizeStyle));
         this.updateRelationships();
+        this.render();
     }
     render() {
         this.geometry.onTick(this.graph);

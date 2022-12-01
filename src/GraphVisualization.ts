@@ -345,17 +345,18 @@ export default class GraphVisualization {
     this.updateNodes();
   }
 
-  public updateRelationShipsStyle(
-    style: UpdateStyle,
-    // relationship: RelationshipModel,
-  ) {
-    const { color } = style;
+  public updateRelationShipsStyle(style: UpdateStyle) {
+    const { color, size } = style;
     const colorStyle = color ? { color } : {};
+    const sizeStyle = size ? { 'shaft-width': `${1 * size}px` } : {};
 
     this.style.changeForSelectorWithRelationClass({
       ...colorStyle,
+      ...sizeStyle,
     });
+
     this.updateRelationships();
+    this.render();
   }
 
   private render() {
